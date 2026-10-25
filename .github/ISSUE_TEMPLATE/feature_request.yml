@@ -1,0 +1,22 @@
+name: Feature request / Suggestion
+description: Describe a useful change or a hardware compatibility request.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Besoin
+      description: What task would this help accomplish? Do not include private network data.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior / Comportement proposé
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Relevant model and firmware, if applicable
+      description: A request does not establish compatibility. Never include router passwords or serial numbers.

@@ -1,0 +1,89 @@
+name: Tests and publication checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements-dev.txt
+      - run: python -m pytest backend/tests -q
+      - run: python scripts/check_release.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend test
+      - run: pnpm --dir frontend build
+      - run: pnpm --dir frontend audit
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pip-audit==2.10.1
+      - run: pip-audit -r backend/requirements.txt --progress-spinner off
+      - name: Verify scanner checksum and scan full history
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=https://github.com/gitleaks/gitleaks/releases/download/v8.30.1
+          curl --fail --location "$base/gitleaks_8.30.1_linux_x64.tar.gz" -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          curl --fail --location "$base/gitleaks_8.30.1_checksums.txt" -o "$RUNNER_TEMP/gitleaks-checksums.txt"
+          expected=$(awk '$2 == "gitleaks_8.30.1_linux_x64.tar.gz" {print $1}' "$RUNNER_TEMP/gitleaks-checksums.txt")
+          test -n "$expected"
+          echo "$expected  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check --status
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git . --redact --log-opts=--all --no-banner
+
+  compose:
+    runs-on: ubuntu-latest
+    env:
+      ORANGE_BIND: 127.0.0.1
+      ORANGE_PORT: '18097'
+      ORANGE_ALLOWED_HOSTS: localhost,127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker compose -p livebox-os-ci config --quiet
+      - run: docker compose -p livebox-os-ci up -d --build --wait --wait-timeout 180
+      - name: Check health and authentication boundary
+        run: |
+          python -c "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:18097/api/health')); assert d['application']=='Livebox OS' and d['status']=='ok'"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18097/api/network/nat)" = 401
+      - if: always()
+        run: docker compose -p livebox-os-ci down --volumes --remove-orphans

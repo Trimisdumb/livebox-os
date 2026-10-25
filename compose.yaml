@@ -1,0 +1,58 @@
+name: orange-os
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "${ORANGE_BIND:-127.0.0.1}:${ORANGE_PORT:-8097}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 100
+    logging:
+      options:
+        max-size: "5m"
+        max-file: "3"
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      ORANGE_DATA_DIR: /app/data
+      ORANGE_ALLOWED_HOSTS: "${ORANGE_ALLOWED_HOSTS:-localhost,127.0.0.1}"
+      ORANGE_SETUP_SOURCES: "${ORANGE_SETUP_SOURCES:-127.0.0.1,::1,172.16.0.0/12}"
+      ORANGE_TRUST_PROXY: "1"
+      ORANGE_COOKIE_SECURE: "${ORANGE_COOKIE_SECURE:-0}"
+    volumes:
+      - orange-data:/app/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 150
+    logging:
+      options:
+        max-size: "5m"
+        max-file: "3"
+volumes:
+  orange-data:

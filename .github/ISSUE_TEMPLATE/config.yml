@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security report / Signalement privé
+    url: mailto:trim@kirbytrim.buzz
+    about: Do not post credentials or vulnerability details in a public issue.

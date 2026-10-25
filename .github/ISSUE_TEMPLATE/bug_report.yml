@@ -1,0 +1,51 @@
+name: Bug report / Signaler un bug
+description: Report a reproducible problem without private data.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "For security vulnerabilities, email trim@kirbytrim.buzz privately. Never attach passwords, cookies, tokens, full logs, backups or real network configurations. Pour les failles, utilisez le contact privé ; anonymisez les données."
+  - type: input
+    id: version
+    attributes:
+      label: Livebox OS version
+      placeholder: "3.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation
+      options:
+        - Docker Compose on Linux
+        - Docker Desktop on Windows
+        - Native Windows
+        - Native Linux
+    validations:
+      required: true
+  - type: input
+    id: router
+    attributes:
+      label: Router model, hardware revision and firmware
+      description: "Model/version only. No serial number, MAC, public IP or SSID. Modèle/version uniquement."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce / Étapes
+      description: Include expected and observed behavior. Do not post credentials or sensitive API responses.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Anonymized evidence / Éléments anonymisés
+      description: Optional sanitized screenshot or error code. Keep network addresses, device names and tokens private.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed passwords, tokens, cookies, backups and personal network data.
+          required: true
