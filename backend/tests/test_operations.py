@@ -2,10 +2,42 @@ import base64
 import time
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from backend import auth, database, main, operations
 from backend.livebox import Livebox, LiveboxError
+
+
+def test_desktop_preferences_preserve_existing_wallpaper_and_old_clients(monkeypatch, tmp_path):
+    with client_for(monkeypatch, tmp_path) as client:
+        old = {'theme': 'dark', 'wallpaper': 'custom', 'fit': 'contain', 'blur': 3}
+        assert client.put('/api/preferences', json=old).status_code == 200
+        image = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl9kAAAAASUVORK5CYII=')
+        assert client.put('/api/wallpaper', content=image).status_code == 200
+        desktop = operations.DesktopPreferences(icon_order=['vpn', 'status'], dock_pinned=['vpn'], remember_windows=True, wallpaper_x=12).model_dump()
+        assert client.put('/api/preferences', json={**old, 'desktop': desktop}).status_code == 200
+        # Older clients may still send only the four V3 preference fields.
+        assert client.put('/api/preferences', json=old).status_code == 200
+        assert client.get('/api/preferences').json() == {**old, 'desktop': desktop}
+        assert client.get('/api/wallpaper').content == image
+        backup = client.get('/api/backup').json()
+        assert backup['version'] == '4.0'
+        prepared = client.post('/api/backup/prepare', json=backup)
+        assert prepared.status_code == 200
+        assert client.post('/api/backup/confirm', json={'token': prepared.json()['token']}).status_code == 200
+        assert client.get('/api/preferences').json()['desktop'] == desktop
+        assert client.get('/api/wallpaper').content == image
+
+
+@pytest.mark.parametrize('desktop', [
+    {'icon_order': ['vpn', 'vpn']}, {'dock_pinned': ['../private']},
+    {'wallpaper_x': -1}, {'wallpaper_y': 101}, {'icon_size': 'huge'},
+    {'password': 'forbidden-field'},
+])
+def test_desktop_preferences_reject_invalid_values(monkeypatch, tmp_path, desktop):
+    with client_for(monkeypatch, tmp_path) as client:
+        assert client.put('/api/preferences', json={'desktop': desktop}).status_code == 422
 
 
 def client_for(monkeypatch, tmp_path):

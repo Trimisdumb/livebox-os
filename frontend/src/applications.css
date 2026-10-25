@@ -1,0 +1,136 @@
+.desktop-os { --accent: #ff7900; --focus: #9e4000; --muted: #626773; overflow: clip; }
+.desktop-os.dark { --focus: #ffb36f; --muted: #bdc0cc; }
+.desktop-os[data-accent=amber] { --accent: #efa400; }
+.desktop-os :is(button, a, input, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.desktop-os input:focus, .desktop-os select:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+.desktop-os .primary { background: var(--accent); color: #202020; text-shadow: none; }
+.desktop-os .primary:hover { background: var(--accent); filter: brightness(.95); }
+.desktop-os .os-window { left: var(--window-x); top: var(--window-y); resize: both; min-width: min(420px, calc(100vw - 20px)); }
+.desktop-os .window-titlebar > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.desktop-os .window-controls { flex-shrink: 0; }
+.desktop-os .window-controls button { min-width: 36px; height: 44px; }
+.desktop-os .window-status { flex-shrink: 0; }
+.desktop-os .window-status > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.desktop-os .task-apps { min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding: 3px 1px; }
+.desktop-os .task-app, .desktop-os .launcher-button { flex-shrink: 0; min-width: 44px; min-height: 44px; }
+.desktop-os .task-app, .desktop-os .notification-button { display: grid; }
+.desktop-os .taskbar-right { flex-shrink: 0; }
+.desktop-os .taskbar-right > button { min-width: 38px; min-height: 44px; }
+.desktop-os .taskbar-right .show-desktop { min-width: 8px; }
+.desktop-os .desktop-apps { scrollbar-width: thin; scroll-padding: 10px; }
+.desktop-os.icons-small .app-icon { width: 40px; height: 40px; }
+.desktop-os.icons-small .app-icon svg { width: 23px; height: 23px; }
+.desktop-os.icons-large .app-icon { width: 56px; height: 56px; }
+.desktop-os.icons-large .app-icon svg { width: 31px; height: 31px; }
+.desktop-os.icons-large .desktop-app { min-height: 98px; }
+.desktop-os .version { white-space: nowrap; }
+.desktop-os .notification-center-link { margin: 0 0 15px; width: 100%; white-space: normal; }
+.desktop-skip { position: absolute; left: 1rem; top: .5rem; z-index: 20001; padding: .8rem; background: var(--surface); color: var(--text); transform: translateY(-180%); }
+.desktop-skip:focus { transform: none; }
+.desktop-os:has(> .wallpaper-custom):after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: #0d11199e; }
+.desktop-os:has(> .wallpaper-custom) :is(.desktop-intro, .desktop-app, .brand-name) { color: #fff; }
+.desktop-os:has(> .wallpaper-custom) :is(.desktop-intro h1 > span, .desktop-intro p, .desktop-intro .eyebrow, .brand-name small, .local-badge, .desktop-footer, .version) { color: #eceef4; }
+.desktop-os:has(> .wallpaper-custom) .version { background: #151820a8; }
+.desktop-os:has(> .wallpaper-custom) .desktop-header .round-button { background: #20242cbf; color: #fff; }
+.desktop-os:has(> .wallpaper-custom) .avatar { background: #20242cbf; color: #fff; }
+.desktop-os.motion-disabled *, .desktop-os.motion-disabled *::before, .desktop-os.motion-disabled *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+
+.v4-application { --line: #92969e; --cc-link: #9e4000; padding: 24px 28px; color: var(--text); font-size: 14px; line-height: 1.6; min-width: 0; }
+.dark .v4-application { --line: #818693; --cc-link: #ffb36f; }
+.v4-application .v4-application { padding: 16px 0; }
+.v4-application :is(h2, h3) { line-height: 1.35; font-weight: 650; }
+.v4-application h2 { font-size: 20px; margin-bottom: 12px; }
+.v4-application h3 { font-size: 15px; margin: 12px 0; }
+.v4-application p { margin: 8px 0; overflow-wrap: anywhere; }
+.v4-application :is(button, .cc-actions a) { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--text); font-size: 13px; transition: transform .12s; }
+.v4-application button:hover:not(:disabled) { background: var(--subtle); }
+.v4-application button:disabled { cursor: not-allowed; }
+.v4-application .cc-primary, .v4-application .primary { background: var(--accent); color: #202020; border-color: #9e4000; }
+.v4-application .cc-primary:hover:not(:disabled), .v4-application .primary:hover:not(:disabled) { background: var(--accent); }
+.v4-application a { color: var(--cc-link); text-decoration: underline; }
+.v4-application label { display: flex; flex-direction: column; gap: 7px; font-size: 13px; margin: 12px 0; }
+.desktop-os .v4-application input:not([type=checkbox]):not([type=range]):not([type=file]), .desktop-os .v4-application select { width: 100%; min-height: 40px; padding: 8px 10px; font-size: 14px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; }
+.v4-application input::placeholder { color: var(--muted); opacity: 1; }
+.v4-application summary { cursor: pointer; min-height: 40px; padding: 9px 0; font-weight: 600; }
+.v4-application :is(time, small, .cc-source) { color: var(--muted); font-size: 12px; }
+.application-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 18px; }
+.v4-application .application-tabs button[aria-selected=true] { background: var(--subtle); outline: 2px solid var(--cc-link); outline-offset: -2px; }
+.cc-section { border-top: 1px solid var(--line); padding: 18px 0; margin-top: 16px; }
+.cc-heading, .cc-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.cc-heading { margin-bottom: 16px; }
+.cc-row { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.cc-row > div { min-width: 0; flex: 1 1 180px; }
+.cc-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.cc-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; margin: 12px 0; }
+.cc-fields label { margin: 0; }
+.cc-form { padding: 18px; margin: 18px 0; border-radius: 8px; background: var(--subtle); }
+.cc-empty, .cc-notice { padding: 14px; margin: 16px 0; background: var(--subtle); border-radius: 7px; }
+.cc-empty button { margin-top: 10px; }
+.cc-error { padding: 14px; border: 2px solid var(--cc-link); border-radius: 7px; }
+.cc-equipment-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; margin: 18px 0; }
+.v4-application .cc-equipment-list button { flex-direction: column; text-align: left; align-items: start; min-width: 0; overflow-wrap: anywhere; }
+.v4-application .cc-equipment-list button[aria-pressed=true] { outline: 2px solid var(--cc-link); outline-offset: -2px; }
+.v4-application .cc-check { display: flex; flex-direction: row; align-items: center; min-height: 40px; gap: 10px; }
+.v4-application .cc-check input { width: 22px; height: 22px; flex-shrink: 0; accent-color: #9e4000; }
+.cc-detail { border: 1px solid var(--line); border-radius: 8px; padding: 18px; margin: 20px 0; }
+.cc-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; margin: 18px 0; }
+.cc-facts dt { color: var(--muted); font-size: 12px; }
+.cc-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.cc-data { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 380px; overflow: auto; padding: 14px; background: var(--subtle); border-radius: 7px; font: 12px/1.6 Consolas, monospace; margin: 14px 0; }
+.cc-confirm { border: 2px solid var(--cc-link); border-radius: 8px; padding: 15px; margin: 16px 0; }
+.cc-device-list article { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.cc-device-list form { display: grid; gap: 8px; }
+.cc-toolbar { display: flex; flex-wrap: wrap; align-items: start; gap: 20px; }
+.cc-toolbar > label { min-width: 170px; }
+.cc-history { display: flex; flex-wrap: wrap; gap: 3px; margin: 18px 0; }
+.cc-history span { border: 1px solid var(--line); background: var(--subtle); text-align: center; width: 20px; }
+.cc-history .reachable { color: var(--surface); background: var(--text); }
+.cc-latency { margin: 18px 0; }
+.cc-latency svg { width: 100%; height: auto; border-bottom: 1px solid var(--line); }
+.cc-latency figcaption { color: var(--muted); font-size: 12px; }
+.v4-application .panel { padding: 18px 0; }
+.v4-application .table-wrap { max-width: 100%; overflow-x: auto; }
+.v4-application .network-chart [stroke="#ff7900"] { stroke: var(--cc-link); }
+.v4-application .network-chart [stroke="#6366f1"] { stroke: var(--text); stroke-dasharray: 6 4; }
+.v4-application .network-chart [fill="#ff7900"] { fill: var(--cc-link); }
+.v4-application .network-chart text { opacity: 1; }
+.density-compact .v4-application .cc-row { padding-block: 8px; }
+
+@media (max-width: 1000px) and (min-width: 601px) {
+  .desktop-os .taskbar-right { gap: 8px; }
+  .desktop-os .taskbar { gap: 8px; padding-inline: 10px; }
+  .cc-device-list article { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .desktop-os .desktop-surface { display: flex; flex-direction: column; overflow-y: auto; padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .desktop-os .desktop-header { height: auto; min-height: 84px; padding: 18px 20px; order: 0; flex-shrink: 0; gap: 12px; }
+  .desktop-os .desktop-intro { position: relative; inset: auto; margin: 20px 25px; order: 1; }
+  .desktop-os .desktop-intro h1 { font-size: clamp(27px, 7vw, 35px); }
+  .desktop-os .desktop-apps { position: relative; inset: auto; width: auto; margin: 20px 16px; max-height: none; overflow: visible; order: 3; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .desktop-os .desktop-app { min-height: 90px; }
+  .desktop-os .connection-widget { position: relative; inset: auto; width: auto; margin: 15px 20px; order: 2; flex-shrink: 0; padding: 15px; }
+  .desktop-os .connection-widget .router-scene, .desktop-os .connection-widget .widget-heading { display: none; }
+  .desktop-os .connection-widget .widget-body { padding: 0; width: 100%; }
+  .desktop-os .connection-widget h2 { display: block; margin: 0 0 12px; font-size: 18px; }
+  .desktop-os .connection-widget .primary { width: 100%; min-height: 44px; }
+  .desktop-os .desktop-footer { display: flex; position: relative; inset: auto; margin: 15px 25px; order: 4; }
+  .desktop-os .os-window, .desktop-os .os-window.maximized { inset: 8px 10px auto !important; width: calc(100vw - 20px) !important; height: calc(100dvh - 104px - env(safe-area-inset-bottom)) !important; max-height: none; min-height: 180px; resize: none; }
+  .desktop-os .window-controls button { min-width: 44px; }
+  .desktop-os .window-titlebar { height: 48px; }
+  .desktop-os .taskbar { bottom: calc(12px + env(safe-area-inset-bottom)); gap: 6px; padding-inline: 8px; }
+  .desktop-os .taskbar-right { gap: 3px; }
+  .desktop-os .taskbar-right .notification-button { min-width: 44px; }
+  .desktop-os .tray-connect { display: none; }
+  .desktop-os .taskbar-right .task-divider { display: none; }
+  .desktop-os .task-clock { min-width: 52px; padding: 2px; }
+  .desktop-os .launcher { max-height: calc(100dvh - 110px - env(safe-area-inset-bottom)); }
+  .v4-application { padding: 18px 15px; }
+  .v4-application :is(button, select, input:not([type=checkbox]):not([type=range])) { min-height: 44px; }
+  .desktop-os .v4-application input:not([type=checkbox]):not([type=range]):not([type=file]), .desktop-os .v4-application select { font-size: 16px; min-height: 44px; }
+  .v4-application .cc-check { min-height: 44px; }
+  .cc-device-list article { grid-template-columns: 1fr; gap: 12px; }
+  .cc-detail, .cc-form { padding: 12px; }
+  .cc-facts { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .desktop-os *, .desktop-os *::before, .desktop-os *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+@media (forced-colors: active) { .desktop-os :is(button, input, select):focus-visible { outline: 3px solid Highlight; } }

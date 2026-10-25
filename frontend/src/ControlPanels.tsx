@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { WindowVisibility } from './DesktopWindow';
 import { api, text, duration, type Result } from './api';
 
 export type Resource = {
@@ -13,7 +14,8 @@ type Catalog = { id: string; manufacturer: string; model?: string; method?: stri
 type Automation = { id: string; name: string; resource: string; event: string; enabled: boolean };
 type Note = { id: string; alias: string; favorite: boolean; category: string };
 
-export function useRemote<T>(path: string, interval = 0) {
+export function useRemote<T>(path: string, interval = 0, enabled = true) {
+  const visible = useContext(WindowVisibility);
   const [data, setData] = useState<T>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -30,10 +32,11 @@ export function useRemote<T>(path: string, interval = 0) {
     finally { if (!current.signal.aborted) setBusy(false); }
   }, [path]);
   useEffect(() => {
+    if (!visible || !enabled) { controller.current?.abort(); setBusy(false); return; }
     void load();
     const timer = interval ? setInterval(() => { if (!document.hidden) void load(); }, interval) : undefined;
     return () => { clearInterval(timer); controller.current?.abort(); };
-  }, [load, interval]);
+  }, [load, interval, visible, enabled]);
   return { data, error, busy, load };
 }
 
@@ -49,7 +52,7 @@ export function Feedback({ error, busy }: { error: string; busy: boolean }) {
   return <>{busy && <p role="status">Lecture des données du backend…</p>}{error && <p className="cc-error" role="alert">{error}</p>}</>;
 }
 
-export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' | 'server'; onChange: () => void }) {
+export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' | 'server'; onChange?: () => void }) {
   const state = useRemote<Resource[]>('/control/resources', 30000);
   const catalog = useRemote<{ connectors: Catalog[] }>('/control/catalog');
   const [selected, select] = useState('');
@@ -70,7 +73,7 @@ export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' 
   const driver = catalog.data?.connectors.find(item => item.id === form.connector);
   async function run(job: () => Promise<void>) {
     setWorking(true); setMessage('');
-    try { await job(); await state.load(); onChange(); }
+    try { await job(); await state.load(); onChange?.(); }
     catch (e) { setMessage((e as Error).message); }
     finally { setWorking(false); }
   }

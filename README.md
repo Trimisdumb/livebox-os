@@ -2,12 +2,12 @@
 
 <img src="frontend/public/livebox-logo.svg" width="80" alt="Livebox OS logo" />
 
-# Livebox OS 3.0 🍊
+# Livebox OS 🍊
 
 **Your routers. Your network. Your desktop.**  
 **Vos routeurs. Votre réseau. Votre bureau.**
 
-![Version](https://img.shields.io/badge/version-3.0.0-ff7900)
+![Development version](https://img.shields.io/badge/development-4.0.0--dev.1-ff7900)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776ab)
 ![React](https://img.shields.io/badge/React-19-149eca)
@@ -18,16 +18,16 @@
 
 </div>
 
-> **V4 development branch:** this branch adds a network workspace, a multi-device registry, OpenWrt protocol reads, optional SSH/Linux/VPN observations, configurable monitoring and local notification rules. It is **not a 4.0.0 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). The stable 3.0 baseline remains on `main` and `v3.0.0`.
+> **V4 development branch, `4.0.0-dev.1`:** the V3 desktop remains the main interface. Router inventory, VPN, Linux servers, security reads, monitoring and notifications open in desktop windows. Personalization adds icon ordering/sizing, dock pinning and optional window geometry persistence. This is **not a stable V4 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). V3 remains on `main` and `v3.0.0`.
 >
-> **Branche de développement V4 :** nouveau centre réseau, registre multi-équipements, lectures OpenWrt, observations SSH/Linux/VPN facultatives, monitoring configurable et alertes locales. La V4 reste en développement. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). Le bureau classique reste accessible.
+> **Branche V4, `4.0.0-dev.1` :** le bureau V3 reste l’interface principale, avec ses icônes colorées, son dock et ses fenêtres. Les applications Routeurs, VPN, Serveurs, Sécurité et Notifications intègrent les fonctions V4. Personnalisation règle aussi l’ordre et la taille des icônes, le dock et la mémorisation facultative des fenêtres. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). Les images personnelles importées ne sont pas distribuées avec le projet.
 
-![V4 development workspace, actual unconnected local installation](docs/images/v4-network-light.png)
+![V4 desktop based on V3, actual unconnected local installation with the built-in background](docs/images/v4-network-light.png)
 
 [Dark theme](docs/images/v4-network-dark.png) · [Mobile view](docs/images/v4-network-mobile.png) · [V4 validation and limits](docs/V4-VALIDATION.md)
 
 <details>
-<summary>Classic desktop retained / Bureau classique conservé</summary>
+<summary>V3 reference / Référence V3</summary>
 
 ![Livebox OS desktop — clean local installation, no personal data](docs/images/desktop.png)
 

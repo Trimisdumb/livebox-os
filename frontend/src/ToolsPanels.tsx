@@ -593,7 +593,7 @@ export function BackupPanel({
       );
       const a = document.createElement("a");
       a.href = url;
-      a.download = "orange-os-1.1-sauvegarde.json";
+      a.download = "livebox-os-sauvegarde.json";
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {

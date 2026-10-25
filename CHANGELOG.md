@@ -2,9 +2,12 @@
 
 ## Unreleased: V4 development
 
-This branch is not an official 4.0.0 release. The package/API baseline remains 3.0 until the release scope is ready.
+Package and API version: `4.0.0-dev.1`. This branch is not a stable V4 release.
 
-- Added a grouped network workspace with mobile navigation, keyboard support, two themes, widget selection, density and non-sensitive preference export/import. The classic desktop remains available.
+- Restored the V3 desktop as the sole main interface: colored app grid, welcome text, connection card, wallpaper, top bar and translucent dock. Removed the separate dashboard shell; its useful views now open in desktop windows.
+- Added keyboard window movement/resizing, stable pointer resizing, bounded window geometry, focus ordering, optional local geometry persistence and polling suspension for minimized network views.
+- Added icon sizing/ordering, dock pinning, wallpaper focal position, optional reduced animations and Orange/amber actions. Existing custom images and V3 preferences are preserved; application backups accept V3 and the extended V4 preference schema.
+- Added responsive desktop/window layouts, keyboard tabs, visible focus, two themes, optional overview sections, density and non-sensitive preference export/import.
 - Added multiple router/server profiles, destination allowlisting, DNS pinning, passive gateway candidates, connection ownership and configurable session collectors.
 - Added fixed OpenWrt ubus reads and optional dedicated-key SSH observations for Linux, systemd, Docker, WireGuard, OpenVPN and Tailscale. These integrations are protocol/adapter tested, not hardware validated.
 - Added Livebox guest/schedule/firewall/ping/DMZ/DynDNS/reboot-history reads and confirmed guest/firewall/reboot operations, without executing them against real devices during development.

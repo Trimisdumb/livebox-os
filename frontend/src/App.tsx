@@ -4,7 +4,6 @@ import {
   useState,
   type ComponentType,
   type CSSProperties,
-  type PointerEvent,
 } from "react";
 import {
   Activity,
@@ -19,8 +18,6 @@ import {
   HardDrive,
   LockKeyhole,
   LogOut,
-  Maximize2,
-  Minus,
   Moon,
   MoreHorizontal,
   Network,
@@ -30,6 +27,10 @@ import {
   Search,
   Settings2,
   ShieldCheck,
+  Server,
+  Workflow,
+  Shield,
+  SlidersHorizontal,
   Sun,
   Terminal,
   Users,
@@ -51,7 +52,11 @@ import {
 } from "./api";
 import { ArcherPanel, TopologyPanel, AdvancedNATPanel, MonitorPanel } from "./NetworkPanels";
 import AuthGate from "./AuthGate";
-import ControlCenter from "./ControlCenter";
+import DesktopWindow from './DesktopWindow';
+import { clampWindow, desktopPreferences, dockApplications, focusWindow, orderApplications, restoredGeometry, type DesktopPreferences, type DesktopWindowState } from './desktop';
+import { ApplicationSettings, AuditApplication, DesktopAppearance, DeviceApplication, DiagnosticApplication, LiveboxTools, NotificationApplication, OverviewApplication, RegistryApplication, RouterApplication, SecurityApplication, StatisticsApplication, Tabs } from './DesktopApps';
+import { version } from '../package.json';
+import { useRemote } from './ControlPanels';
 import SharesPanel from "./SharesPanel";
 import { BackupPanel, DiagnosticsPanel, StoragePanel } from "./ToolsPanels";
 import {
@@ -78,7 +83,8 @@ export type AppId =
   | "storage"
   | "diagnostics"
   | "backup"
-  | "personalization" | "archer" | "topology" | "advanced-nat" | "monitor";
+  | "personalization" | "archer" | "topology" | "advanced-nat" | "monitor"
+  | "vpn" | "security" | "servers" | "automations" | "notifications" | "wifi" | "livebox-tools" | "app-settings" | "overview";
 export const APPS: {
   id: AppId;
   name: string;
@@ -187,21 +193,24 @@ export const APPS: {
     icon: Download,
     color: "slate",
   },
+  { id: 'wifi', name: 'Wi-Fi', short: 'Wi-Fi', description: 'Bandes, SSID, canaux et réseau invité', icon: Wifi, color: 'blue' },
+  { id: 'livebox-tools', name: 'Fonctions Livebox', short: 'Fonctions Livebox', description: 'Services accessibles selon votre firmware', icon: Settings2, color: 'orange' },
+  { id: 'vpn', name: 'VPN', short: 'VPN', description: 'Observations WireGuard, OpenVPN et Tailscale', icon: ShieldCheck, color: 'teal' },
+  { id: 'security', name: 'Sécurité', short: 'Sécurité', description: 'Lire les contrôles de configuration', icon: Shield, color: 'slate' },
+  { id: 'servers', name: 'Serveurs', short: 'Serveurs', description: 'Lectures de serveurs Linux autorisés', icon: Server, color: 'gold' },
+  { id: 'automations', name: 'Automatisations', short: 'Automatisations', description: 'Règles locales sur les événements observés', icon: Workflow, color: 'violet' },
+  { id: 'notifications', name: 'Notifications', short: 'Notifications', description: 'Historique et acquittement des alertes', icon: Bell, color: 'pink' },
+  { id: 'app-settings', name: 'Paramètres de l’application', short: 'Paramètres OS', description: 'Préférences et version de Livebox OS', icon: SlidersHorizontal, color: 'slate' },
+  { id: 'overview', name: 'Vue réseau', short: 'Vue réseau', description: 'Synthèse facultative dans une fenêtre', icon: Activity, color: 'green' },
 ];
 export type Preferences = {
   theme: "light" | "dark";
   wallpaper: string;
   fit: "cover" | "contain" | "center";
   blur: number;
+  desktop?: DesktopPreferences;
 };
-type WindowState = {
-  id: AppId;
-  x: number;
-  y: number;
-  z: number;
-  minimized: boolean;
-  maximized: boolean;
-};
+type WindowState = DesktopWindowState & { id: AppId };
 export type ChangeRequest = { kind: string; values: Record<string, unknown> };
 type Prepared = {
   token: string;
@@ -224,6 +233,7 @@ function initialPreferences(): Preferences {
         : "signature",
       fit: ["cover", "contain", "center"].includes(p.fit) ? p.fit : "cover",
       blur: Math.min(20, Math.max(0, Number(p.blur) || 0)),
+      ...(p.desktop ? { desktop: desktopPreferences(p.desktop) } : {}),
     };
   } catch {
     return defaults;
@@ -232,11 +242,11 @@ function initialPreferences(): Preferences {
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState | null>(null);
-  const [controlMode, setControlMode] = useState(() => {
-    try { return localStorage.getItem('livebox-classic-desktop') !== 'true'; }
-    catch { return true; }
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
+    try { return JSON.parse(localStorage.getItem('livebox-density') || 'null') === 'compact' ? 'compact' : 'comfortable'; }
+    catch { return 'comfortable'; }
   });
-  const [requestedApp, setRequestedApp] = useState<{ id: AppId; revision: number } | null>(null);
+  const localAlerts = useRemote<{ acknowledged: number }[]>('/control/notifications', 30000, auth?.authenticated === true);
   const [session, setSession] = useState<Session>({ connected: false });
   const [snapshot, setSnapshot] = useState<Snapshot>({});
   const [events, setEvents] = useState<LogEntry[]>([]);
@@ -258,21 +268,42 @@ export default function App() {
   const [backend, setBackend] = useState(true);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const savedPreferences = useRef('');
-  const z = useRef(10);
-  const drag = useRef<{ id: AppId; dx: number; dy: number } | null>(null);
   const dialogReturnFocus = useRef<HTMLElement | null>(null);
 
   function notify(message: string) {
     setToast(message);
   }
-  function changeWorkspace(value: boolean) {
-    setControlMode(value);
-    setLauncher(false);
-    setNotifications(false);
-    setMenu(null);
-    try { localStorage.setItem('livebox-classic-desktop', String(!value)); }
-    catch { notify('Le choix du bureau ne peut pas être enregistré dans ce navigateur.'); }
+  const appearance = desktopPreferences(preferences.desktop);
+  const desktopApps = orderApplications(APPS, appearance.icon_order);
+  const dockApps = dockApplications(desktopApps, appearance.dock_pinned, windows);
+  useEffect(() => {
+    try { localStorage.setItem('livebox-density', JSON.stringify(density)); }
+    catch { notify('La densité ne peut pas être enregistrée dans ce navigateur.'); }
+  }, [density]);
+  useEffect(() => {
+    const resize = () => setWindows(items => items.map(win => clampWindow(win, innerWidth, innerHeight)));
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+  function saveLayout(items: WindowState[]) {
+    if (!appearance.remember_windows || !items.length) return;
+    try {
+      const previous = JSON.parse(localStorage.getItem('livebox-window-layout') || '{}');
+      const layout = Object.fromEntries(APPS.flatMap(app => {
+        const win = items.find(w => w.id === app.id);
+        const geometry = win ? { x: win.x, y: win.y, width: win.width, height: win.height } : restoredGeometry(previous?.[app.id]);
+        return Object.keys(geometry).length ? [[app.id, geometry]] : [];
+      }));
+      localStorage.setItem('livebox-window-layout', JSON.stringify(layout));
+    } catch { notify('Les positions ne peuvent pas être enregistrées dans ce navigateur.'); }
   }
+  useEffect(() => {
+    if (!appearance.remember_windows || !windows.length) return;
+    const timer = setTimeout(() => saveLayout(windows), 250);
+    const flush = () => saveLayout(windows);
+    window.addEventListener('pagehide', flush);
+    return () => { clearTimeout(timer); window.removeEventListener('pagehide', flush); };
+  }, [windows, appearance.remember_windows]);
   const checkAuth = () =>
     api<AuthState>("/auth/state")
       .then(setAuth)
@@ -469,41 +500,28 @@ export default function App() {
   }, [session.connected, session.url, revision]);
 
   const openApp = (id: AppId) => {
-    if (controlMode) {
-      setRequestedApp({ id, revision: Date.now() });
-      return;
-    }
     setLauncher(false);
     setMenu(null);
-    setWindows((current) =>
-      current.some((w) => w.id === id)
-        ? current.map((w) =>
-            w.id === id ? { ...w, minimized: false, z: ++z.current } : w,
-          )
-        : [
-            ...current,
-            {
-              id,
-              x: Math.max(
-                10,
-                Math.min(window.innerWidth - 760, 180 + current.length * 25),
-              ),
-              y: 90 + (current.length % 5) * 24,
-              minimized: false,
-              maximized: false,
-              z: ++z.current,
-            },
-          ],
-    );
+    let saved = {};
+    if (appearance.remember_windows) {
+      try { saved = restoredGeometry(JSON.parse(localStorage.getItem('livebox-window-layout') || '{}')?.[id]); }
+      catch { saved = {}; }
+    }
+    setWindows(current => focusWindow(current.some(w => w.id === id)
+      ? current.map(w => w.id === id ? { ...w, minimized: false } : w)
+      : [...current, clampWindow({ id, x: Math.max(10, Math.min(innerWidth - 780, 180 + current.length * 25)), y: 90 + (current.length % 5) * 24,
+        width: 780, height: 570, z: 10, ...saved, minimized: false, maximized: false }, innerWidth, innerHeight)], id));
   };
   const focus = (id: AppId) =>
-    setWindows((current) =>
-      current.map((w) => (w.id === id ? { ...w, z: ++z.current } : w)),
-    );
-  const patchWindow = (id: AppId, patch: Partial<WindowState>) =>
+    setWindows(current => current.every(w => w.id === id || w.minimized || w.z < (current.find(w => w.id === id)?.z || 0)) ? current : focusWindow(current, id));
+  const patchWindow = (id: AppId, patch: Partial<Omit<WindowState, 'id'>>) =>
     setWindows((current) =>
       current.map((w) => (w.id === id ? { ...w, ...patch } : w)),
     );
+  const closeWindow = (id: AppId) => {
+    saveLayout(windows);
+    setWindows(items => items.filter(win => win.id !== id));
+  };
   const showLogin = (profile?: Profile) => {
     dialogReturnFocus.current = document.activeElement as HTMLElement;
     setLogin(
@@ -569,17 +587,17 @@ export default function App() {
   const panel = (id: AppId) => {
     if (id === "personalization")
       return (
-        <PersonalizationPanel
+        <><PersonalizationPanel
           preferences={preferences}
           update={setPreferences}
           image={image}
           onImage={setImage}
           notify={notify}
-        />
+        /><DesktopAppearance preferences={preferences} update={setPreferences} apps={APPS} /></>
       );
     if (id === "profiles")
       return <ProfilesPanel connect={showLogin} notify={notify} revision={revision} />;
-    if (id === "diagnostics") return <DiagnosticsPanel />;
+    if (id === "diagnostics") return <DiagnosticApplication legacy={<DiagnosticsPanel />} />;
     if (id === "backup")
       return (
         <BackupPanel
@@ -590,7 +608,17 @@ export default function App() {
           notify={notify}
         />
       );
-    if (id === "archer") return <ArcherPanel />;
+    if (id === "archer") return <RouterApplication legacy={<ArcherPanel />} />;
+    if (id === 'vpn' || id === 'servers' || id === 'automations') return <RegistryApplication kind={id} open={openApp} />;
+    if (id === 'notifications') return <NotificationApplication open={openApp} />;
+    if (id === 'security') return <SecurityApplication session={session} open={openApp} />;
+    if (id === 'livebox-tools') return <LiveboxTools connected={session.connected} connect={() => showLogin()} open={openApp} />;
+    if (id === 'app-settings') return <ApplicationSettings density={density} setDensity={setDensity} preferences={preferences} update={setPreferences} open={openApp} />;
+    if (id === 'devices') return <DeviceApplication legacy={session.connected ? <DevicesPanel revision={revision} /> : disconnected} />;
+    if (id === 'stats') return <StatisticsApplication legacy={session.connected ? <StatisticsPanel snapshot={snapshot} /> : disconnected} />;
+    if (id === 'journal') return <AuditApplication legacy={session.connected ? <JournalPanel entries={events} revision={revision} /> : disconnected} />;
+    if (id === 'overview') return <OverviewApplication session={session} snapshot={snapshot} connect={() => showLogin()} open={openApp} statistics={session.connected ? <StatisticsPanel snapshot={snapshot} /> : disconnected} />;
+    if (id === 'wifi') return <div className="v4-application"><Tabs tabs={[{ name: 'Wi-Fi principal', content: session.connected ? <SettingsPanel revision={revision} change={requestChange} /> : disconnected }, { name: 'Invité et planification', content: <LiveboxTools connected={session.connected} connect={() => showLogin()} open={openApp} /> }]} /></div>;
     if (id === "topology") return <TopologyPanel />;
     if (id === "advanced-nat") return <AdvancedNATPanel />;
     if (id === "monitor") return <MonitorPanel />;
@@ -601,28 +629,22 @@ export default function App() {
         return (
           <StatusPanel snapshot={snapshot} session={session} open={openApp} />
         );
-      case "devices":
-        return <DevicesPanel revision={revision} />;
       case "settings":
         return <SettingsPanel revision={revision} change={requestChange} />;
       case "ports":
         return <PortsPanel revision={revision} change={requestChange} />;
-      case "stats":
-        return <StatisticsPanel snapshot={snapshot} />;
       case "phone":
         return <CallsPanel revision={revision} />;
-      case "journal":
-        return <JournalPanel entries={events} revision={revision} />;
     }
   };
 
   return (
     <main
-      className={`os ${preferences.theme} ${controlMode ? 'control-mode' : ''}`}
+      className={`os desktop-os ${preferences.theme} density-${density} icons-${appearance.icon_size} ${appearance.animations ? '' : 'motion-disabled'}`}
+      data-accent={appearance.accent}
       onClick={() => menu && setMenu(null)}
     >
-      {auth?.authenticated && controlMode && <ControlCenter session={session} snapshot={snapshot} panel={panel} connect={() => showLogin()} logout={logout} theme={preferences.theme} requestedApp={requestedApp} toggleTheme={() => setPreferences(p => ({ ...p, theme: p.theme === 'dark' ? 'light' : 'dark' }))} desktop={() => changeWorkspace(false)} />}
-      {auth?.authenticated && !controlMode && <button className="cc-return" onClick={() => changeWorkspace(true)}>Centre réseau V4</button>}
+      <a className="desktop-skip" href="#desktop-applications">Aller aux applications</a>
       <div
         className={`wallpaper wallpaper-${preferences.wallpaper === "custom" && !image ? "signature" : preferences.wallpaper}`}
         style={{
@@ -630,6 +652,7 @@ export default function App() {
           ...(preferences.wallpaper === "custom" && image
             ? {
                 backgroundImage: `url(${image})`,
+                backgroundPosition: `${appearance.wallpaper_x}% ${appearance.wallpaper_y}%`,
                 backgroundSize:
                   preferences.fit === "center" ? "auto" : preferences.fit,
               }
@@ -661,13 +684,13 @@ export default function App() {
             <img
               className="brand-logo"
               src="/livebox-logo.svg"
-              alt="Logo Livebox OS 3.0"
+              alt="Logo Livebox OS"
             />
             <span className="brand-name">
               Livebox <b>OS</b>
               <small>VOTRE LIVEBOX, SIMPLEMENT.</small>
             </span>
-            <span className="version">3.0</span>
+            <span className="version" title={version}>{version.split('-')[0]} dev</span>
           </div>
           <div className="header-right">
             <span className="local-badge">
@@ -710,8 +733,8 @@ export default function App() {
           </h1>
           <p>Un espace pour votre Livebox. Et tout ce qui s’y connecte.</p>
         </section>
-        <section className="desktop-apps" aria-label="Applications Livebox OS">
-          {APPS.map((app) => (
+        <section id="desktop-applications" className="desktop-apps" aria-label="Applications Livebox OS" tabIndex={-1}>
+          {desktopApps.map((app) => (
             <button
               className="desktop-app"
               key={app.id}
@@ -815,103 +838,11 @@ export default function App() {
       {windows.map((win) => {
         const app = APPS.find((a) => a.id === win.id)!;
         return (
-          <section
-            key={win.id}
-            aria-label={app.name}
-            className={`os-window ${win.maximized ? "maximized" : ""}`}
-            style={
-              {
-                "--window-x": `${win.x}px`,
-                "--window-y": `${win.y}px`,
-                zIndex: win.z,
-                display: win.minimized ? "none" : undefined,
-              } as CSSProperties
-            }
-            onPointerDown={() => focus(win.id)}
-          >
-            <div
-              className="window-titlebar"
-              onDoubleClick={() =>
-                patchWindow(win.id, { maximized: !win.maximized })
-              }
-              onPointerDown={(e: PointerEvent<HTMLDivElement>) => {
-                if (
-                  (e.target as HTMLElement).closest("button") ||
-                  win.maximized
-                )
-                  return;
-                drag.current = {
-                  id: win.id,
-                  dx: e.clientX - win.x,
-                  dy: e.clientY - win.y,
-                };
-                e.currentTarget.setPointerCapture(e.pointerId);
-              }}
-              onPointerMove={(e) => {
-                if (drag.current?.id === win.id)
-                  patchWindow(win.id, {
-                    x: Math.min(
-                      innerWidth - 120,
-                      Math.max(0, e.clientX - drag.current.dx),
-                    ),
-                    y: Math.min(
-                      innerHeight - 140,
-                      Math.max(0, e.clientY - drag.current.dy),
-                    ),
-                  });
-              }}
-              onPointerUp={() => {
-                drag.current = null;
-              }}
-              onLostPointerCapture={() => {
-                drag.current = null;
-              }}
-            >
-              <span className={`title-icon ${app.color}`}>
-                <app.icon size={16} />
-              </span>
-              <strong>{app.name}</strong>
-              <div className="window-controls">
-                <button
-                  aria-label={`Réduire ${app.name}`}
-                  onClick={() => patchWindow(win.id, { minimized: true })}
-                >
-                  <Minus size={16} />
-                </button>
-                <button
-                  aria-label={`Agrandir ${app.name}`}
-                  onClick={() =>
-                    patchWindow(win.id, { maximized: !win.maximized })
-                  }
-                >
-                  <Maximize2 size={13} />
-                </button>
-                <button
-                  className="close-window"
-                  aria-label={`Fermer ${app.name}`}
-                  onClick={() =>
-                    setWindows((w) => w.filter((a) => a.id !== win.id))
-                  }
-                >
-                  <X size={17} />
-                </button>
-              </div>
-            </div>
-            <div className="window-content">{panel(win.id)}</div>
-            <div className="window-status">
-              <span>
-                <i
-                  className={`status-dot ${session.connected ? "online" : ""}`}
-                />
-                {win.id === "personalization"
-                  ? "Préférences enregistrées sur cet appareil"
-                  : session.connected
-                    ? `${session.name} · ${session.url}`
-                    : "Aucune Livebox connectée"}
-              </span>
-              <span>Livebox OS</span>
-            </div>
-          </section>
+          <DesktopWindow key={win.id} win={win} name={app.name} color={app.color} icon={app.icon}
+            focus={() => focus(win.id)} patch={patch => patchWindow(win.id, patch)} close={() => closeWindow(win.id)}
+            status={win.id === 'personalization' ? 'Préférences du bureau' : session.connected ? `${session.name} · ${session.url}` : 'Données selon les équipements connectés'}>
+            {panel(win.id)}
+          </DesktopWindow>
         );
       })}
       <nav className="taskbar" aria-label="Barre des tâches">
@@ -927,7 +858,7 @@ export default function App() {
         </button>
         <span className="task-divider" />
         <div className="task-apps">
-          {APPS.map((app) => (
+          {dockApps.map((app) => (
             <button
               className={`task-app ${windows.some((w) => w.id === app.id && !w.minimized) ? "active" : ""}`}
               key={app.id}
@@ -977,7 +908,7 @@ export default function App() {
             }}
           >
             <Bell size={18} />
-            {events.length > 0 && <i />}
+            {(events.length > 0 || localAlerts.data?.some(item => !item.acknowledged)) && <i />}
           </button>
           <button
             className="task-clock"
@@ -1024,7 +955,7 @@ export default function App() {
               />
             </label>
             <div className="launcher-grid">
-              {APPS.filter((a) =>
+              {desktopApps.filter((a) =>
                 a.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
               ).map((app) => (
                 <button key={app.id} onClick={() => openApp(app.id)}>
@@ -1077,6 +1008,7 @@ export default function App() {
                 month: "long",
               })}
             </div>
+            <button className="secondary notification-center-link" onClick={() => { setNotifications(false); openApp('notifications'); }}>Ouvrir le centre de notifications{localAlerts.data?.some(item => !item.acknowledged) ? ' · alertes à consulter' : ''}</button>
             {events.length ? (
               events.slice(0, 10).map((entry, i) => (
                 <div key={i} className="notification-item">

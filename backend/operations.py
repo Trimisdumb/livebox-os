@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from . import auth, database
 
@@ -22,12 +22,33 @@ diagnostic_lock = asyncio.Semaphore(2)
 last_diagnostic = {}
 
 
+class DesktopPreferences(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    icon_size: Literal['small', 'medium', 'large'] = 'medium'
+    icon_order: list[str] = Field(default_factory=list, max_length=64)
+    dock_pinned: list[str] | None = Field(default=None, max_length=64)
+    remember_windows: bool = False
+    wallpaper_x: float = Field(default=50, ge=0, le=100)
+    wallpaper_y: float = Field(default=50, ge=0, le=100)
+    animations: bool = True
+    accent: Literal['orange', 'amber'] = 'orange'
+
+    @field_validator('icon_order', 'dock_pinned')
+    @classmethod
+    def app_ids(cls, value):
+        import re
+        if value is not None and (len(value) != len(set(value)) or any(not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', item) for item in value)):
+            raise ValueError('Identifiants d’applications invalides ou répétés.')
+        return value
+
+
 class Preferences(BaseModel):
     model_config = ConfigDict(extra='forbid')
     theme: Literal['light', 'dark'] = 'light'
     wallpaper: Literal['signature', 'dune', 'night', 'custom'] = 'signature'
     fit: Literal['cover', 'contain', 'center'] = 'cover'
     blur: float = Field(default=0, ge=0, le=20)
+    desktop: DesktopPreferences | None = None
 
 
 class Diagnostic(BaseModel):
@@ -42,7 +63,7 @@ class RestoreToken(BaseModel):
 def read_settings():
     try:
         data = json.loads((DATA / 'settings.json').read_text(encoding='utf-8'))
-        return Preferences.model_validate(data['preferences']).model_dump() | {'_profiles': data.get('profiles', [])}
+        return Preferences.model_validate(data['preferences']).model_dump(exclude_none=True) | {'_profiles': data.get('profiles', [])}
     except FileNotFoundError:
         return {}
 
@@ -177,7 +198,10 @@ def create_router(get_session, profile_type, profiles_read, profiles_write):
     async def save_preferences(body: Preferences):
         async with lock:
             current = read_settings()
-            atomic_json(DATA / 'settings.json', {'preferences': body.model_dump(), 'profiles': current.get('_profiles', [])})
+            value = body.model_dump(exclude_none=True)
+            if body.desktop is None and current.get('desktop'):
+                value['desktop'] = current['desktop']
+            atomic_json(DATA / 'settings.json', {'preferences': value, 'profiles': current.get('_profiles', [])})
         return {'ok': True}
 
     @router.put('/wallpaper')
@@ -207,17 +231,18 @@ def create_router(get_session, profile_type, profiles_read, profiles_write):
     @router.get('/backup')
     async def backup():
         image = DATA / 'wallpaper.bin'
-        return {'application': 'Livebox OS', 'version': '3.0', 'profiles': profiles_read(), 'preferences': read_preferences() or Preferences().model_dump(), 'wallpaper': base64.b64encode(image.read_bytes()).decode('ascii') if image.exists() else None}
+        preferences = read_preferences() or Preferences().model_dump(exclude_none=True)
+        return {'application': 'Livebox OS', 'version': '4.0' if 'desktop' in preferences else '3.0', 'profiles': profiles_read(), 'preferences': preferences, 'wallpaper': base64.b64encode(image.read_bytes()).decode('ascii') if image.exists() else None}
 
     @router.post('/backup/prepare')
     async def prepare_backup(body: dict, request: Request):
         try:
-            if set(body) != {'application', 'version', 'profiles', 'preferences', 'wallpaper'} or (body['application'], body['version']) not in (('Orange OS', '1.1'), ('Livebox OS', '3.0')) or not isinstance(body['profiles'], list) or len(body['profiles']) > 20:
+            if set(body) != {'application', 'version', 'profiles', 'preferences', 'wallpaper'} or (body['application'], body['version']) not in (('Orange OS', '1.1'), ('Livebox OS', '3.0'), ('Livebox OS', '4.0')) or not isinstance(body['profiles'], list) or len(body['profiles']) > 20:
                 raise ValueError()
             profiles = [profile_type.model_validate(p).model_dump() for p in body['profiles']]
             if len({p['name'] for p in profiles}) != len(profiles):
                 raise ValueError()
-            preferences = Preferences.model_validate(body['preferences']).model_dump()
+            preferences = Preferences.model_validate(body['preferences']).model_dump(exclude_none=True)
             image = base64.b64decode(body['wallpaper'], validate=True) if body['wallpaper'] else None
             if image:
                 if len(image) > 15 * 1024 * 1024:

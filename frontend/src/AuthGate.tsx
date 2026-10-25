@@ -6,6 +6,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { api, type AuthState } from "./api";
+import { version } from '../package.json';
 
 export default function AuthGate({
   state,
@@ -38,9 +39,9 @@ export default function AuthGate({
         <img
           className="auth-logo"
           src="/livebox-logo.svg"
-          alt="Logo Livebox OS 3.0"
+          alt="Logo Livebox OS"
         />
-        <span className="eyebrow">LIVEBOX OS 3.0</span>
+        <span className="eyebrow">LIVEBOX OS {version}</span>
         <h2 id="auth-title">
           {setup ? "Votre espace, protégé." : "Bienvenue chez vous."}
         </h2>

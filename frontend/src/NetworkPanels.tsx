@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { WindowVisibility } from './DesktopWindow';
 import { Activity, ArrowDown, Check, Network, RefreshCw, Router, ShieldCheck } from 'lucide-react';
 import { api, rec, rows, text, duration, type RecordData, type Result, type LogEntry } from './api';
 
@@ -12,6 +13,7 @@ type Form = { name: string; target: string; destination: string; external: numbe
 type Prepared = { token: string; plan: Operation; warning: string };
 
 function useNetwork<T>(path: string, poll = true) {
+  const visible = useContext(WindowVisibility);
   const [data, setData] = useState<T>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -21,7 +23,7 @@ function useNetwork<T>(path: string, poll = true) {
     catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }, [path]);
-  useEffect(() => { void load(); if (!poll) return; const timer = setInterval(() => void load(), 30000); return () => clearInterval(timer); }, [load, poll]);
+  useEffect(() => { if (!visible) return; void load(); if (!poll) return; const timer = setInterval(() => { if (!document.hidden) void load(); }, 30000); return () => clearInterval(timer); }, [load, poll, visible]);
   return { data, error, busy, load };
 }
 

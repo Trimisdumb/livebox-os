@@ -1,4 +1,10 @@
-# API Livebox OS 3.0
+# API Livebox OS
+
+La branche `develop/v4` annonce `4.0.0-dev.1` dans `/api/health`. Cette version de développement conserve les routes V3 et ajoute le registre décrit dans [CONNECTORS.md](CONNECTORS.md).
+
+`GET/PUT /api/preferences` conserve `theme`, `wallpaper`, `fit` et `blur`. Le champ facultatif `desktop` contient `icon_size` (small/medium/large), `icon_order` (identifiants uniques), `dock_pinned` (liste ou null pour toutes), `remember_windows`, `wallpaper_x/y` (0 à 100), `animations` et `accent` (orange/amber). Un ancien client qui omet `desktop` préserve sa valeur existante. Les positions et dimensions des fenêtres restent dans le navigateur, sans contenu de fenêtre ni identifiant réseau.
+
+Les sauvegardes applicatives contenant ces options portent le schéma `4.0` ; il ne désigne pas une release stable. L’import accepte aussi les schémas Orange OS 1.1 et Livebox OS 3.0, avec confirmation existante. Le fichier image reste inchangé lors d’une mise à jour des préférences.
 
 Le schéma complet est servi par `GET /api/openapi.json`, après connexion administrateur. Les routes existantes de la Livebox, des profils, préférences, sauvegardes, USB et diagnostics sont conservées.
 

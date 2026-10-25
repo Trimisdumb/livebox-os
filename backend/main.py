@@ -139,7 +139,8 @@ async def lifespan(app):
     await control.shutdown()
 
 
-app = FastAPI(title='Livebox OS', version='3.0', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+VERSION = '4.0.0-dev.1'
+app = FastAPI(title='Livebox OS', version=VERSION, docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=[h.strip() for h in os.environ.get('ORANGE_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],testserver').split(',')])
 app.include_router(auth.router)
 app.include_router(control.router)
@@ -206,7 +207,7 @@ def authorized(request: Request):
 
 @app.get('/api/health')
 async def health():
-    return {'status': 'ok', 'application': 'Livebox OS', 'version': '3.0'}
+    return {'status': 'ok', 'application': 'Livebox OS', 'version': VERSION}
 
 
 @app.get('/api/session')
