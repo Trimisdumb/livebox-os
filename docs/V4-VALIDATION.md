@@ -8,7 +8,7 @@ Date: 2026-10-26. Version: `4.0.0-dev.1`, branch `develop/v4`. This record cover
 - Frontend: **9 passed**, covering API cancellation/errors/CSRF and desktop geometry, focus order, icon ordering, dock access and old-preference defaults.
 - TypeScript and Vite production build passed. No dependency was added.
 - `pnpm audit` and `pip-audit -r backend/requirements.txt` reported no known vulnerabilities at the time of this check.
-- The existing CI workflow additionally checks backend tests on Windows and Linux, frontend build/tests, source publication checks, dependency vulnerabilities, full-history secret scanning and an isolated Docker Compose startup/authentication boundary. Docker is unavailable on this local Windows environment; Compose execution is checked by that CI job. Consult the branch's [Actions results](https://github.com/Trimisdumb/livebox-os/actions) for its actual outcome.
+- The existing CI workflow additionally checks backend tests on Windows and Linux, frontend build/tests, source publication checks, dependency vulnerabilities, full-history secret scanning and an isolated Docker Compose startup/authentication boundary. Docker is unavailable on this local Windows environment; Compose execution is checked by that CI job. Consult the branch's [Actions results](https://github.com/trim360/livebox-os/actions) for its actual outcome.
 
 The local backend run emits an upstream Starlette/httpx deprecation warning; all 90 tests pass. This does not justify replacing tested runtime dependencies during a UI correction.
 

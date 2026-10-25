@@ -121,7 +121,7 @@ export function ApplicationSettings({ density, setDensity, preferences, update, 
         if (data.schema === 2 && data.desktop && typeof data.desktop === 'object') update(p => ({ ...p, desktop: desktopPreferences(data.desktop) }));
         setMessage('Préférences importées. Votre image et votre thème actuels sont conservés.');
       } catch (e) { setMessage((e as Error).message); }
-    }} /></label>{message && <p role="status">{message}</p>}<Feedback {...health} /><p>Version : {health.data?.version || 'Lecture en cours'}. Développement V4, sans release stable.</p><p>La traduction complète et les rôles utilisateurs restent à développer. Les intégrations non compatibles sont indiquées dans chaque application.</p><a href="https://github.com/Trimisdumb/livebox-os/releases" target="_blank" rel="noreferrer">Consulter les versions publiées</a></V4Application>;
+    }} /></label>{message && <p role="status">{message}</p>}<Feedback {...health} /><p>Version : {health.data?.version || 'Lecture en cours'}. Développement V4, sans release stable.</p><p>La traduction complète et les rôles utilisateurs restent à développer. Les intégrations non compatibles sont indiquées dans chaque application.</p><a href="https://github.com/trim360/livebox-os/releases" target="_blank" rel="noreferrer">Consulter les versions publiées</a></V4Application>;
 }
 
 export function DesktopAppearance({ preferences, update, apps }: { preferences: Preferences; update: Dispatch<SetStateAction<Preferences>>; apps: AppDescription[] }) {
