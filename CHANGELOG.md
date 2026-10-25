@@ -4,6 +4,8 @@
 
 Package and API version: `4.0.0-dev.1`. This branch is not a stable V4 release.
 
+- Promoted the V4 desktop to `main` as the default source. The V3 tag is retained; no stable V4 release is created by this promotion.
+
 - Restored the V3 desktop as the sole main interface: colored app grid, welcome text, connection card, wallpaper, top bar and translucent dock. Removed the separate dashboard shell; its useful views now open in desktop windows.
 - Added keyboard window movement/resizing, stable pointer resizing, bounded window geometry, focus ordering, optional local geometry persistence and polling suspension for minimized network views.
 - Added icon sizing/ordering, dock pinning, wallpaper focal position, optional reduced animations and Orange/amber actions. Existing custom images and V3 preferences are preserved; application backups accept V3 and the extended V4 preference schema.

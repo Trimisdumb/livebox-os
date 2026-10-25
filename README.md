@@ -18,9 +18,9 @@
 
 </div>
 
-> **V4 development branch, `4.0.0-dev.1`:** the V3 desktop remains the main interface. Router inventory, VPN, Linux servers, security reads, monitoring and notifications open in desktop windows. Personalization adds icon ordering/sizing, dock pinning and optional window geometry persistence. This is **not a stable V4 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). V3 remains on `main` and `v3.0.0`.
+> **V4 on `main`, `4.0.0-dev.1`:** the V3 desktop remains the main interface. Router inventory, VPN, Linux servers, security reads, monitoring and notifications open in desktop windows. Personalization adds icon ordering/sizing, dock pinning and optional window geometry persistence. This is **not a stable V4 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). V3 remains available at tag `v3.0.0`.
 >
-> **Branche V4, `4.0.0-dev.1` :** le bureau V3 reste l’interface principale, avec ses icônes colorées, son dock et ses fenêtres. Les applications Routeurs, VPN, Serveurs, Sécurité et Notifications intègrent les fonctions V4. Personnalisation règle aussi l’ordre et la taille des icônes, le dock et la mémorisation facultative des fenêtres. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). Les images personnelles importées ne sont pas distribuées avec le projet.
+> **V4 sur `main`, `4.0.0-dev.1` :** le bureau V3 reste l’interface principale, avec ses icônes colorées, son dock et ses fenêtres. Les applications Routeurs, VPN, Serveurs, Sécurité et Notifications intègrent les fonctions V4. Personnalisation règle aussi l’ordre et la taille des icônes, le dock et la mémorisation facultative des fenêtres. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). La V3 reste disponible au tag `v3.0.0`. Les images personnelles importées ne sont pas distribuées avec le projet.
 
 ![V4 desktop based on V3, actual unconnected local installation with the built-in background](docs/images/v4-network-light.png)
 

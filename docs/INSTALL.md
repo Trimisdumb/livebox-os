@@ -2,7 +2,7 @@
 
 ## V4 development
 
-To evaluate the V4 development branch, use a separate clone/Compose project and follow [the V4 migration and feature guide](V4.md). Optional SSH setup is documented in [Servers and VPN](SERVERS-VPN.md). This branch is not an official 4.0.0 release and should not share a production data volume while being evaluated.
+`main` currently contains V4 development version `4.0.0-dev.1`; the V3 source remains available at tag `v3.0.0`. To evaluate V4, use a separate clone/Compose project and follow [the V4 migration and feature guide](V4.md). Optional SSH setup is documented in [Servers and VPN](SERVERS-VPN.md). V4 is not a stable release; an evaluation instance should not share a production data volume.
 
 [English](#english) · [Français](#français)
 
