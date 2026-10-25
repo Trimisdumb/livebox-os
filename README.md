@@ -164,7 +164,7 @@ Le Wi-Fi TP-Link reste en lecture seule ; son pare-feu et celui de l'appareil ci
 
 **La sauvegarde contient-elle mes mots de passe ?** L'export applicatif les exclut. Il peut néanmoins contenir vos profils, noms, adresses privées et image : gardez-le privé.
 
-## 🤖 À propos de l'intelligence artificielle
+### 🤖 À propos de l'intelligence artificielle
 
 Livebox OS a été développé avec l'aide de l'intelligence artificielle, notamment ChatGPT Codex.
 
@@ -203,7 +203,7 @@ Captures réelles d'une installation locale vierge, sans routeur connecté, appa
 
 ## Contact
 
-**Contact : [trim@kirbytrim.buzz](mailto:trim@kirbytrim.buzz)**
+**Contact :** [trim@kirbytrim.buzz](mailto:trim@kirbytrim.buzz)
 
 For bug reports, technical questions, suggestions and security problems. Public issues may also be used for non-sensitive bugs; use [SECURITY.md](SECURITY.md) for private vulnerability reports.
 

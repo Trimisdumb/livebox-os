@@ -10,7 +10,20 @@ Date: 2026-10-25. Results below distinguish isolated tests, application startup 
 - An isolated loopback instance started successfully. Its actual desktop, personalization and unconnected NAT application were captured with a temporary local account. No production account, router data or personal wallpaper was used.
 - Direct browser CLI launch failed in this environment; screenshots were instead captured and visually checked through the integrated browser. This does not indicate an application startup failure.
 
-Clean-clone and Compose results are recorded after execution below. CI workflows are prepared, but have not run on GitHub because no remote repository has been created or pushed.
+## Clean clone and Compose
+
+- A fresh local Git clone installed frontend dependencies with the frozen lockfile, passed 52 backend tests and 3 frontend tests, built the frontend and passed the publication-file checks.
+- Native Windows startup from that clean clone passed health, frontend, SVG and unauthenticated-private-API boundary checks.
+- A separate clean clone on Debian built and started both Compose services successfully, with healthy frontend/backend and a loopback-only temporary test port. It used its own project, network, images and disposable data volume; it did not use production credentials or the production volume.
+- Actual HTTP checks verified host-side pairing approval, first-account setup, CSRF rejection, profile/preference round trips, application backup, protected OpenAPI and logout. No router was connected or queried by this fresh installation.
+- The same 52 backend tests passed inside the Linux image. The initial unit-test invocation inherited the production-style test container's restricted host/proxy environment; rerunning with the test host and native test-bootstrap settings passed. Production settings were not weakened.
+- Known-advisory checks reported none for the updated Windows Python resolution, the resolved Linux runtime and the locked frontend. Base-image operating-system packages were not comprehensively scanned by these package-level tools.
+
+CI workflows are prepared, but have not run on GitHub because no remote repository has been created or pushed. Deployment preservation and final packaging are checked separately; this record does not claim a GitHub Actions run.
+
+## Deployment preservation
+
+After the isolated checks, their containers, volume, network and project images were removed. All 34 pre-existing containers (the private Livebox OS pair and 32 other services) retained the same IDs, start timestamps and restart counts. The deployed backend source and persistent non-SQLite files matched the initial hashes. Active SQLite observation history was intentionally excluded because the running application continues to record events. The original local repository remained clean at its original commit. No private deployment file or `.env` was edited, and no production upgrade was performed.
 
 ## Earlier real-hardware verification
 

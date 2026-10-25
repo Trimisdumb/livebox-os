@@ -6,7 +6,7 @@ Prepared 2026-10-25. Scope: application source, browser/deployment security boun
 
 The public repository is prepared as a **fresh sanitized snapshot**, not a rewrite or push of the private development repository. The original repository, private configuration and deployed services are preserved. No GitHub repository, push or public release has been created.
 
-Gitleaks 8.30.1 scanned all 13 private development commits with redacted output and found no recognized secret. Additional historical review found private deployment/network metadata and two literal Argon2-prefix assertions in tests; the assertions are not stored password hashes. Private metadata is removed from the public copy. No real credential exposure requiring rotation was established by this review. A scanner cannot prove that no secret has ever existed outside its scope.
+Gitleaks 8.30.1 scanned all 13 private development commits with redacted output and found no recognized secret. The historical review inspected 134 file blobs. It found private deployment/network metadata and two literal Argon2-prefix assertions in tests; the assertions are not stored password hashes. Private metadata is removed from the public copy. No real credential exposure requiring rotation was established by this review. A scanner cannot prove that no secret has ever existed outside its scope.
 
 ## Findings and dispositions
 
@@ -41,4 +41,6 @@ Dependency license texts, notices and versioned source pointers are retained in 
 
 ## Publication gate
 
-The final public snapshot must pass tracked-file checks, documentation-link/image-metadata checks, Gitleaks working-tree and history scans, clean-clone tests and isolated Compose startup before it is presented for publication approval. No approval is implied by preparing a local commit/tag or source archive. Public creation and push remain separate human-approved actions.
+The candidate passed tracked-file/documentation-link/image-metadata checks, clean-clone tests and isolated Compose startup. Public Git history and release-file scans are repeated for the final local tag/archive. No approval is implied by preparing a local commit/tag or source archive. Public creation and push remain separate human-approved actions.
+
+The isolated test resources were removed. All 34 existing service containers and the private application's source/persistent non-SQLite file hashes matched the initial baseline. The private deployment therefore still uses its existing dependencies; applying the candidate's security updates to it is a separate operation requiring its own deployment plan.

@@ -18,7 +18,7 @@ A source comparison found no exact implementation sequence meeting the review th
 
 ## Dependencies
 
-The resolved Windows validation inventory, with package versions, declared licenses, upstream sources and notice paths, is [docs/dependency-licenses.json](docs/dependency-licenses.json). The `licenses/` directory retains the available package license/notice texts, including copyright notices. Linux-only dependencies and base-image packages retain their packaged notices and may differ by platform.
+The resolved Windows and Linux validation inventory, with package versions, declared licenses, upstream sources and notice paths, is [docs/dependency-licenses.json](docs/dependency-licenses.json). The `licenses/` directory retains package license/notice texts, including copyright notices. Base-image packages retain their packaged notices and may differ by platform.
 
 | Components | License / obligation |
 |---|---|
@@ -42,7 +42,7 @@ The current `livebox-logo.svg` and CSS wallpaper are original project assets. Pu
 
 An owner-supplied legacy PNG had no documented redistribution license. It is excluded from this public copy; the unused legacy logo URL returns the current project SVG. The current user interface already uses that SVG and is unchanged. The original private asset remains in the private project.
 
-No original Freebox screenshot, Orange corporate logo or proprietary router frontend is included. Orange, Livebox, Freebox and TP-Link names and trademarks remain with their respective owners. No trademark license or affiliation is implied.
+No original Freebox screenshot, vendor-provided corporate-logo image or proprietary router frontend bundle is included. The CSS router illustration identifies the product and its brand. Orange, Livebox, Freebox and TP-Link names and trademarks remain with their respective owners. No trademark license or affiliation is implied.
 
 ## Maintainer checklist
 

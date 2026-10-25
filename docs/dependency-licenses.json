@@ -1,6 +1,6 @@
 {
   "generated": "2026-10-25",
-  "scope": "Windows x64 validation environment: Python runtime/test tools and frontend runtime/build tools. Platform-only wheels differ.",
+  "scope": "Resolved Windows x64 validation runtime/test/build tools plus the Linux Compose runtime. Third-party source remains upstream.",
   "python": [
     {
       "name": "PyYAML",
@@ -1168,6 +1168,218 @@
       "notices": [
         "licenses/npm-source-map-js-1.2.2.txt"
       ]
+    }
+  ],
+  "linux_runtime": [
+    {
+      "name": "websockets",
+      "version": "17.3",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/websockets/17.3/#files",
+      "notice": "licenses/linux-python-websockets.txt"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/anyio/4.15.1/#files",
+      "notice": "licenses/linux-python-anyio.txt"
+    },
+    {
+      "name": "watchfiles",
+      "version": "1.3.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/watchfiles/1.3.0/#files",
+      "notice": "licenses/linux-python-watchfiles.txt"
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "license": "Apache-2.0 OR BSD-3-Clause",
+      "source": "https://pypi.org/project/cryptography/50.0.2/#files",
+      "notice": "licenses/linux-python-cryptography.txt"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "license": "PSF-2.0",
+      "source": "https://pypi.org/project/typing_extensions/4.16.0/#files",
+      "notice": "licenses/linux-python-typing_extensions.txt"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.38.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/uvicorn/0.38.0/#files",
+      "notice": "licenses/linux-python-uvicorn.txt"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/httpcore/1.0.9/#files",
+      "notice": "licenses/linux-python-httpcore.txt"
+    },
+    {
+      "name": "uvloop",
+      "version": "0.23.0",
+      "license": "MIT License",
+      "source": "https://pypi.org/project/uvloop/0.23.0/#files",
+      "notice": "licenses/linux-python-uvloop.txt"
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "license": "MIT-0",
+      "source": "https://pypi.org/project/cffi/2.1.1/#files",
+      "notice": "licenses/linux-python-cffi.txt"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/annotated-types/0.8.0/#files",
+      "notice": "licenses/linux-python-annotated-types.txt"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/h11/0.16.0/#files",
+      "notice": "licenses/linux-python-h11.txt"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "license": "MIT",
+      "source": "https://pypi.org/project/PyYAML/6.0.3/#files",
+      "notice": "licenses/linux-python-pyyaml.txt"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "license": "MIT",
+      "source": "https://pypi.org/project/typing-inspection/0.4.4/#files",
+      "notice": "licenses/linux-python-typing-inspection.txt"
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "license": "MIT",
+      "source": "https://pypi.org/project/annotated-doc/0.0.5/#files",
+      "notice": "licenses/linux-python-annotated-doc.txt"
+    },
+    {
+      "name": "httptools",
+      "version": "0.9.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/httptools/0.9.0/#files",
+      "notice": "licenses/linux-python-httptools.txt"
+    },
+    {
+      "name": "smbprotocol",
+      "version": "1.15.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/smbprotocol/1.15.0/#files",
+      "notice": "licenses/linux-python-smbprotocol.txt"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.45.1",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/opentelemetry-api/1.45.1/#files",
+      "notice": "licenses/linux-python-opentelemetry-api.txt"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/pycparser/3.12/#files",
+      "notice": "licenses/linux-python-pycparser.txt"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/httpx/0.28.1/#files",
+      "notice": "licenses/linux-python-httpx.txt"
+    },
+    {
+      "name": "argon2-cffi",
+      "version": "25.1.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/argon2-cffi/25.1.0/#files",
+      "notice": "licenses/linux-python-argon2-cffi.txt"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.50.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pydantic_core/2.50.1/#files",
+      "notice": "licenses/linux-python-pydantic_core.txt"
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.4",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/python-dotenv/1.2.4/#files",
+      "notice": "licenses/linux-python-python-dotenv.txt"
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/idna/3.20/#files",
+      "notice": "licenses/linux-python-idna.txt"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/click/8.5.0/#files",
+      "notice": "licenses/linux-python-click.txt"
+    },
+    {
+      "name": "starlette",
+      "version": "1.10.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/starlette/1.10.0/#files",
+      "notice": "licenses/linux-python-starlette.txt"
+    },
+    {
+      "name": "pyspnego",
+      "version": "0.12.4",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pyspnego/0.12.4/#files",
+      "notice": "licenses/linux-python-pyspnego.txt"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pydantic/2.14.1/#files",
+      "notice": "licenses/linux-python-pydantic.txt"
+    },
+    {
+      "name": "argon2-cffi-bindings",
+      "version": "26.1.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/argon2-cffi-bindings/26.1.0/#files",
+      "notice": "licenses/linux-python-argon2-cffi-bindings.txt"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.162.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/fastapi/0.162.0/#files",
+      "notice": "licenses/linux-python-fastapi.txt"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.23",
+      "license": "MPL-2.0",
+      "source": "https://pypi.org/project/certifi/2026.10.23/#files",
+      "notice": "licenses/linux-python-certifi.txt"
     }
   ]
 }
