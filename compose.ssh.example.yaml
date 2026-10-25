@@ -1,0 +1,9 @@
+services:
+  backend:
+    environment:
+      LIVEBOX_OS_SSH_DIR: /run/livebox-os-ssh
+    volumes:
+      - type: bind
+        source: ${LIVEBOX_OS_SSH_HOST_DIR:?Set the dedicated SSH directory on the Docker host}
+        target: /run/livebox-os-ssh
+        read_only: true

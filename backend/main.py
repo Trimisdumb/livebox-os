@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .livebox import Livebox, LiveboxError, local_url, redact
-from . import auth, database, operations, network, shares
+from . import auth, database, operations, network, shares, control
 from .nat import normalize, normalize_section
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -113,6 +113,7 @@ async def reaper():
         await asyncio.sleep(60)
         await network.cleanup()
         await shares.cleanup()
+        await control.cleanup()
         for key, session in list(sessions.items()):
             if session.expires < time.time():
                 await remove_session(key)
@@ -135,11 +136,13 @@ async def lifespan(app):
         await network.disconnect(key)
     for key in list(shares.sessions):
         await shares.disconnect(key)
+    await control.shutdown()
 
 
 app = FastAPI(title='Livebox OS', version='3.0', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=[h.strip() for h in os.environ.get('ORANGE_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],testserver').split(',')])
 app.include_router(auth.router)
+app.include_router(control.router)
 
 
 @app.exception_handler(RequestValidationError)
@@ -174,6 +177,7 @@ async def protect(request: Request, call_next):
     try:
         response = await call_next(request)
         if path == '/api/auth/logout' and response.status_code == 200:
+            await control.cleanup(request.cookies.get(auth.COOKIE))
             await network.disconnect(request.cookies.get(auth.COOKIE))
             await shares.disconnect(request.cookies.get(auth.COOKIE))
             await remove_session(request.cookies.get(COOKIE))
@@ -413,6 +417,13 @@ async def read_section(section: str, session: Session = Depends(authorized)):
 @app.get('/api/events')
 async def events(session: Session = Depends(authorized)):
     return list(session.events)
+
+
+@app.get('/api/livebox/features/{section}')
+async def livebox_feature(section: str, session: Session = Depends(authorized)):
+    if section not in control.LB_READS:
+        raise HTTPException(404, 'Lecture Livebox inconnue.')
+    return await control.livebox_read(session.box, section)
 
 
 def validate_change(change):

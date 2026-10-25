@@ -1,5 +1,9 @@
 # Installation — Windows & Linux
 
+## V4 development
+
+To evaluate the V4 development branch, use a separate clone/Compose project and follow [the V4 migration and feature guide](V4.md). Optional SSH setup is documented in [Servers and VPN](SERVERS-VPN.md). This branch is not an official 4.0.0 release and should not share a production data volume while being evaluated.
+
 [English](#english) · [Français](#français)
 
 ## English

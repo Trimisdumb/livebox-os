@@ -40,9 +40,10 @@ export async function api<T>(
   path: string,
   body?: unknown,
   method?: string,
+  externalSignal?: AbortSignal,
 ): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), path === '/read/logs' || path === '/changes/confirm' || path.startsWith('/network/') ? 90000 : path === '/shares/login' ? 45000 : 35000);
+  const timer = setTimeout(() => controller.abort(), path === '/read/logs' || path === '/changes/confirm' || path.startsWith('/network/') || path.startsWith('/control/') ? 90000 : path === '/shares/login' ? 45000 : 35000);
   try {
     const response = await fetch(`/api${path}`, {
       method: method || (body === undefined ? "GET" : "POST"),
@@ -62,7 +63,7 @@ export async function api<T>(
           : body instanceof Blob
             ? body
             : JSON.stringify(body),
-      signal: controller.signal,
+      signal: externalSignal ? AbortSignal.any([controller.signal, externalSignal]) : controller.signal,
     });
     const data = await response.json().catch(() => {
       throw new APIError(
@@ -89,6 +90,7 @@ export async function api<T>(
     if (data.csrf) csrf = data.csrf;
     return data;
   } catch (error) {
+    if (externalSignal?.aborted) throw error;
     if (error instanceof APIError) throw error;
     console.warn(
       "Livebox OS API indisponible",

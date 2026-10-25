@@ -18,7 +18,20 @@
 
 </div>
 
+> **V4 development branch:** this branch adds a network workspace, a multi-device registry, OpenWrt protocol reads, optional SSH/Linux/VPN observations, configurable monitoring and local notification rules. It is **not a 4.0.0 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). The stable 3.0 baseline remains on `main` and `v3.0.0`.
+>
+> **Branche de développement V4 :** nouveau centre réseau, registre multi-équipements, lectures OpenWrt, observations SSH/Linux/VPN facultatives, monitoring configurable et alertes locales. La V4 reste en développement. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). Le bureau classique reste accessible.
+
+![V4 development workspace, actual unconnected local installation](docs/images/v4-network-light.png)
+
+[Dark theme](docs/images/v4-network-dark.png) · [Mobile view](docs/images/v4-network-mobile.png) · [V4 validation and limits](docs/V4-VALIDATION.md)
+
+<details>
+<summary>Classic desktop retained / Bureau classique conservé</summary>
+
 ![Livebox OS desktop — clean local installation, no personal data](docs/images/desktop.png)
+
+</details>
 
 <a id="english"></a>
 ## English

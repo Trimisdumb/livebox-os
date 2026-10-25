@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased: V4 development
+
+This branch is not an official 4.0.0 release. The package/API baseline remains 3.0 until the release scope is ready.
+
+- Added a grouped network workspace with mobile navigation, keyboard support, two themes, widget selection, density and non-sensitive preference export/import. The classic desktop remains available.
+- Added multiple router/server profiles, destination allowlisting, DNS pinning, passive gateway candidates, connection ownership and configurable session collectors.
+- Added fixed OpenWrt ubus reads and optional dedicated-key SSH observations for Linux, systemd, Docker, WireGuard, OpenVPN and Tailscale. These integrations are protocol/adapter tested, not hardware validated.
+- Added Livebox guest/schedule/firewall/ping/DMZ/DynDNS/reboot-history reads and confirmed guest/firewall/reboot operations, without executing them against real devices during development.
+- Added local device annotations/favorites, availability history and CSV/JSON exports, opt-in measured ping latency/loss, transition-based notification rules, manual rule tests and acknowledgement.
+- Added targeted ping, DNS, TCP and bounded traceroute diagnostics, cancellation of obsolete read requests, SSH/confirmation regression tests and additional secret-field redaction.
+- Kept exact TP-Link firmware restrictions, existing Wi-Fi/DHCP/NAT/share/backup functionality and existing deployment defaults. No production upgrade is performed.
+- Documented [remaining V4 work](docs/V4.md), [connector scope](docs/CONNECTORS.md), [SSH/VPN setup](docs/SERVERS-VPN.md) and [validation](docs/V4-VALIDATION.md).
+
 ## [3.0.0] — public release candidate
 
 Prepared on 2026-10-25. This entry does not mean the release has already been published.

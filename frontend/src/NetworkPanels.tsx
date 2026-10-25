@@ -50,13 +50,13 @@ export function ArcherPanel() {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
   const [tab, setTab] = useState('status');
-  return <div className="panel network-panel"><Heading title="Archer AX58" subtitle="V1.0 · firmware 1.5.2 · 20250812 rel.38324(4555)" load={load} busy={busy} />
+  return <div className="panel network-panel"><Heading title="Routeur TP-Link" subtitle="Connecteur validé en V3 sur Archer AX58 V1.0, firmware 1.5.2, 20250812 rel.38324(4555)" load={load} busy={busy} />
     {(error || message) && <p className="info-note" role="status">{error || message}</p>}
     {!data?.connected ? <form className="inset-form" onSubmit={async e => { e.preventDefault(); setWorking(true); setMessage(''); try { await api('/network/tplink/login', { url, password, force, reconnect }); setPassword(''); await load(); } catch (e) { setMessage((e as Error).message); } finally { setWorking(false); } }}>
       <div className="form-grid"><label>Adresse privée du routeur<input required value={url} onChange={e => setURL(e.target.value)} autoComplete="url" /></label><label>Mot de passe administrateur<input type="password" required value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" /></label></div>
       <label className="check-line"><input type="checkbox" checked={reconnect} onChange={e => setReconnect(e.target.checked)} />Autoriser une reconnexion de lecture (mot de passe en mémoire backend, 8 h maximum)</label>
       <label className="check-line"><input type="checkbox" checked={force} onChange={e => setForce(e.target.checked)} />Confirmer le remplacement d’une autre session administrateur TP-Link</label>
-      <button className="primary" disabled={working}>{working ? 'Connexion…' : 'Connecter mon AX58'}</button>
+      <button className="primary" disabled={working}>{working ? 'Connexion…' : 'Connecter le routeur TP-Link'}</button>
     </form> : <>
       <div className="setting-card"><Router size={28} /><div><h3>Session chiffrée établie</h3><p>{data.url} · {data.compatible ? 'Identité et firmware compatibles confirmés' : 'Identité non confirmée : écritures bloquées'}</p></div><button className="secondary small" onClick={async () => { await api('/network/tplink/logout', {}); await load(); }}>Déconnecter</button></div>
       <Details data={data.identity} title="Identité matérielle déclarée par le routeur" />
@@ -76,7 +76,7 @@ export function TopologyPanel() {
       <button className="topology-root" onClick={() => setSelected(data?.livebox)}><Router size={25} /><strong>Livebox 5</strong><small>{data?.livebox ? `LAN ${text(data.livebox.lan)}` : 'Connexion Livebox nécessaire'}</small></button>
       <div className="topology-devices">{data?.devices.filter(d => d.router === 'livebox').map((d, i) => <button key={i} className="topology-device" onClick={() => setSelected(d)}><Network size={17} /><strong>{d.name}</strong><small>{d.ip} · {d.active === false ? 'Absent' : 'Observé sur Livebox'}</small></button>)}</div>
       <ArrowDown className="tree-arrow" /><p className="footnote">{data?.link_verified ? 'WAN TP-Link vérifié dans le sous-réseau LAN Livebox' : 'Lien WAN / LAN non vérifié : connectez les routeurs pour le mesurer'}</p>
-      <button className="topology-root" onClick={() => setSelected(data?.tplink)}><Router size={25} /><strong>Archer AX58</strong><small>WAN {text(data?.tplink?.wan)} → LAN {text(data?.tplink?.lan)}</small></button>
+      <button className="topology-root" onClick={() => setSelected(data?.tplink)}><Router size={25} /><strong>Routeur TP-Link</strong><small>WAN {text(data?.tplink?.wan)} → LAN {text(data?.tplink?.lan)}</small></button>
       <div className="topology-devices">{data?.devices.filter(d => d.router === 'tplink').map((d, i) => <button key={i} className="topology-device" onClick={() => setSelected(d)}><Network size={17} /><strong>{d.name}</strong><small>{d.ip} · {d.connection}</small></button>)}</div>
     </div>
     {selected != null && <Details data={selected} title="Détails de l’élément sélectionné" />}
@@ -85,7 +85,7 @@ export function TopologyPanel() {
 }
 
 function RulesTable({ rules }: { rules: NATRule[] }) {
-  return <div className="table-wrap"><table><thead><tr><th>Routeur / nom</th><th>Externe → interne</th><th>Destination</th><th>Protocole / état</th></tr></thead><tbody>{rules.map((r, i) => <tr key={i}><td><strong>{r.router === 'tplink' ? 'Archer AX58' : 'Livebox'}</strong><small>{r.description || r.id}</small></td><td>{r.externalPort} → {r.internalPort}</td><td>{r.destinationIPAddress}</td><td>{r.protocol} · {r.enabled === true ? 'Activée' : r.enabled === false ? 'Désactivée' : 'État non fourni'}</td></tr>)}</tbody></table></div>;
+  return <div className="table-wrap"><table><thead><tr><th>Routeur / nom</th><th>Externe → interne</th><th>Destination</th><th>Protocole / état</th></tr></thead><tbody>{rules.map((r, i) => <tr key={i}><td><strong>{r.router === 'tplink' ? 'Routeur TP-Link' : 'Livebox'}</strong><small>{r.description || r.id}</small></td><td>{r.externalPort} → {r.internalPort}</td><td>{r.destinationIPAddress}</td><td>{r.protocol} · {r.enabled === true ? 'Activée' : r.enabled === false ? 'Désactivée' : 'État non fourni'}</td></tr>)}</tbody></table></div>;
 }
 
 function NativeNATPanel({ rules, refresh }: { rules: NATRule[]; refresh: () => Promise<void> }) {
@@ -132,7 +132,7 @@ export function AdvancedNATPanel() {
     {(error || state.error) && <p className="network-error" role="alert">{error || state.error}</p>}
     <form className="inset-form" onSubmit={e => { e.preventDefault(); void prepare(editing ? 'update' : 'create', editing); }}><h3>{editing ? 'Modifier le chemin NAT géré' : 'Ouvrir un port'}</h3><div className="form-grid">
       <label>Nom du service<input required maxLength={24} pattern="[A-Za-z0-9 _.-]+" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
-      <label>Routeur de l’appareil<select value={form.target} disabled={!!editing} onChange={e => setForm({ ...form, target: e.target.value, destination: '' })}><option value="tplink">Archer AX58 (double NAT)</option><option value="livebox">Livebox (NAT simple)</option></select></label>
+      <label>Routeur de l’appareil<select value={form.target} disabled={!!editing} onChange={e => setForm({ ...form, target: e.target.value, destination: '' })}><option value="tplink">Routeur TP-Link compatible (double NAT)</option><option value="livebox">Livebox (NAT simple)</option></select></label>
       <label>Appareil observé<select required value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })}><option value="">Choisir un appareil</option>{devices.map((d, i) => <option key={i} value={d.ip}>{d.name} · {d.ip}</option>)}</select></label>
       <label>Protocole<select value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })}><option>TCP</option><option>UDP</option><option value="ALL">TCP + UDP</option></select></label>
       <label>Port externe<input required type="number" min={1} max={65535} value={form.external} onChange={e => setForm({ ...form, external: Number(e.target.value) })} /></label>

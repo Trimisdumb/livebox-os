@@ -35,6 +35,7 @@ services:
       ORANGE_SETUP_SOURCES: "${ORANGE_SETUP_SOURCES:-127.0.0.1,::1,172.16.0.0/12}"
       ORANGE_TRUST_PROXY: "1"
       ORANGE_COOKIE_SECURE: "${ORANGE_COOKIE_SECURE:-0}"
+      LIVEBOX_OS_ALLOWED_NETWORKS: "${LIVEBOX_OS_ALLOWED_NETWORKS:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
     volumes:
       - orange-data:/app/data
     restart: unless-stopped

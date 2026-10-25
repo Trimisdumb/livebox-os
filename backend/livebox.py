@@ -8,6 +8,7 @@ import httpx
 
 
 logger = logging.getLogger('orange.livebox')
+SENSITIVE_FIELDS = ('password', 'passwd', 'passphrase', 'presharedkey', 'privatekey', 'secretkey', 'contextid', 'ubusrpcsession', 'secret', 'authorization', 'stok', 'sysauth', 'pskkey', 'wepkey', 'wpakey', 'token')
 
 
 class LiveboxError(Exception):
@@ -20,7 +21,7 @@ def redact(value):
     if isinstance(value, list):
         return [redact(item) for item in value]
     if isinstance(value, dict):
-        return {key: ('••••••••' if any(word in key.lower().replace('_', '') for word in ('password', 'passwd', 'passphrase', 'presharedkey', 'contextid', 'secret', 'authorization', 'stok', 'sysauth', 'pskkey', 'wepkey', 'wpakey', 'token')) else redact(item)) for key, item in value.items()}
+        return {key: ('••••••••' if any(word in key.lower().replace('_', '').replace('-', '') for word in SENSITIVE_FIELDS) else redact(item)) for key, item in value.items()}
     return value
 
 

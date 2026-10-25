@@ -2,6 +2,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { api, APIError, internetConnected } from '../src/api.ts';
 
+test('une requête quittée reçoit le signal d’annulation et ne devient pas une panne réseau', async () => {
+  const original = globalThis.fetch;
+  const controller = new AbortController();
+  globalThis.fetch = async (_, options) => new Promise((_, reject) => {
+    options?.signal?.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')));
+  });
+  try {
+    const request = api('/control/resources', undefined, undefined, controller.signal);
+    controller.abort();
+    await assert.rejects(request, (error: Error) => error.name === 'AbortError');
+  } finally { globalThis.fetch = original; }
+});
+
 test('une panne de transport affiche un message français, sans Failed to fetch', async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () => { throw new TypeError('Failed to fetch'); };

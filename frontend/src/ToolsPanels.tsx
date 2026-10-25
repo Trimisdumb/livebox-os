@@ -316,7 +316,7 @@ export function DiagnosticsPanel() {
               Livebox : ping et communication Sysbus
             </option>
             <option value="internet">Internet : ping 1.1.1.1</option>
-            <option value="tplink">Archer AX58 : ping et API authentifiée</option>
+            <option value="tplink">Routeur TP-Link : ping et API authentifiée</option>
             <option value="dns">Résolution DNS : orange.fr</option>
             <option value="https">Connexion HTTPS : www.orange.fr</option>
           </select>

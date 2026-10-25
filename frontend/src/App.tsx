@@ -51,6 +51,7 @@ import {
 } from "./api";
 import { ArcherPanel, TopologyPanel, AdvancedNATPanel, MonitorPanel } from "./NetworkPanels";
 import AuthGate from "./AuthGate";
+import ControlCenter from "./ControlCenter";
 import SharesPanel from "./SharesPanel";
 import { BackupPanel, DiagnosticsPanel, StoragePanel } from "./ToolsPanels";
 import {
@@ -87,7 +88,7 @@ export const APPS: {
   color: string;
 }[] = [
   { id: "topology", name: "Topologie réseau", short: "Topologie", description: "Les liens observés entre vos routeurs", icon: Network, color: "teal" },
-  { id: "archer", name: "Archer AX58", short: "Archer AX58", description: "Connexion et données TP-Link", icon: Wifi, color: "blue" },
+  { id: "archer", name: "Routeurs", short: "Routeurs", description: "Connexion et données des routeurs compatibles", icon: Wifi, color: "blue" },
   { id: "advanced-nat", name: "NAT avancé", short: "NAT avancé", description: "Ouvrir un port sur les deux routeurs", icon: EthernetPort, color: "purple" },
   { id: "monitor", name: "Surveillance réseau", short: "Surveillance", description: "Observations et alertes", icon: Activity, color: "green" },
   {
@@ -231,6 +232,11 @@ function initialPreferences(): Preferences {
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState | null>(null);
+  const [controlMode, setControlMode] = useState(() => {
+    try { return localStorage.getItem('livebox-classic-desktop') !== 'true'; }
+    catch { return true; }
+  });
+  const [requestedApp, setRequestedApp] = useState<{ id: AppId; revision: number } | null>(null);
   const [session, setSession] = useState<Session>({ connected: false });
   const [snapshot, setSnapshot] = useState<Snapshot>({});
   const [events, setEvents] = useState<LogEntry[]>([]);
@@ -254,9 +260,18 @@ export default function App() {
   const savedPreferences = useRef('');
   const z = useRef(10);
   const drag = useRef<{ id: AppId; dx: number; dy: number } | null>(null);
+  const dialogReturnFocus = useRef<HTMLElement | null>(null);
 
   function notify(message: string) {
     setToast(message);
+  }
+  function changeWorkspace(value: boolean) {
+    setControlMode(value);
+    setLauncher(false);
+    setNotifications(false);
+    setMenu(null);
+    try { localStorage.setItem('livebox-classic-desktop', String(!value)); }
+    catch { notify('Le choix du bureau ne peut pas être enregistré dans ce navigateur.'); }
   }
   const checkAuth = () =>
     api<AuthState>("/auth/state")
@@ -368,6 +383,7 @@ export default function App() {
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        setLogin(null);
         setMenu(null);
         setLauncher(false);
         setNotifications(false);
@@ -377,6 +393,24 @@ export default function App() {
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
   }, [confirming]);
+  useEffect(() => {
+    if (!login && !prepared) return;
+    const dialog = document.querySelector<HTMLElement>('.login-modal, .confirmation-modal');
+    const selector = 'input:not([disabled]), select:not([disabled]), button:not([disabled]), a[href]';
+    dialog?.querySelector<HTMLElement>(selector)?.focus();
+    const trap = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !dialog) return;
+      const fields = [...dialog.querySelectorAll<HTMLElement>(selector)];
+      const first = fields[0], last = fields[fields.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', trap);
+    return () => {
+      document.removeEventListener('keydown', trap);
+      if (dialogReturnFocus.current?.isConnected) dialogReturnFocus.current.focus({ preventScroll: true });
+    };
+  }, [login, prepared]);
   useEffect(() => {
     if (!session.connected) {
       setSnapshot({});
@@ -435,6 +469,10 @@ export default function App() {
   }, [session.connected, session.url, revision]);
 
   const openApp = (id: AppId) => {
+    if (controlMode) {
+      setRequestedApp({ id, revision: Date.now() });
+      return;
+    }
     setLauncher(false);
     setMenu(null);
     setWindows((current) =>
@@ -466,7 +504,8 @@ export default function App() {
     setWindows((current) =>
       current.map((w) => (w.id === id ? { ...w, ...patch } : w)),
     );
-  const showLogin = (profile?: Profile) =>
+  const showLogin = (profile?: Profile) => {
+    dialogReturnFocus.current = document.activeElement as HTMLElement;
     setLogin(
       profile || {
         name: "Ma Livebox",
@@ -474,6 +513,7 @@ export default function App() {
         username: "admin",
       },
     );
+  };
   const disconnected = (
     <div className="empty-state">
       <span className="empty-icon">
@@ -489,6 +529,7 @@ export default function App() {
     </div>
   );
   async function requestChange(change: ChangeRequest) {
+    dialogReturnFocus.current = document.activeElement as HTMLElement;
     try {
       setPrepared(await api<Prepared>("/changes/prepare", change));
     } catch (e) {
@@ -577,9 +618,11 @@ export default function App() {
 
   return (
     <main
-      className={`os ${preferences.theme}`}
+      className={`os ${preferences.theme} ${controlMode ? 'control-mode' : ''}`}
       onClick={() => menu && setMenu(null)}
     >
+      {auth?.authenticated && controlMode && <ControlCenter session={session} snapshot={snapshot} panel={panel} connect={() => showLogin()} logout={logout} theme={preferences.theme} requestedApp={requestedApp} toggleTheme={() => setPreferences(p => ({ ...p, theme: p.theme === 'dark' ? 'light' : 'dark' }))} desktop={() => changeWorkspace(false)} />}
+      {auth?.authenticated && !controlMode && <button className="cc-return" onClick={() => changeWorkspace(true)}>Centre réseau V4</button>}
       <div
         className={`wallpaper wallpaper-${preferences.wallpaper === "custom" && !image ? "signature" : preferences.wallpaper}`}
         style={{
