@@ -10,7 +10,7 @@
 .desktop-os .window-controls { flex-shrink: 0; }
 .desktop-os .window-controls button { min-width: 36px; height: 44px; }
 .desktop-os .window-status { flex-shrink: 0; }
-.desktop-os .window-content { flex: 1 1 0%; height: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; scroll-padding-block: 16px; }
+.desktop-os .window-content { flex: 1 1 0%; height: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; scroll-padding-block: 16px; }
 .desktop-os .window-status > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .desktop-os .task-apps { min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding: 3px 1px; }
 .desktop-os .task-app, .desktop-os .launcher-button { flex-shrink: 0; min-width: 44px; min-height: 44px; }
