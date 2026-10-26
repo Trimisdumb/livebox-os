@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .livebox import Livebox, LiveboxError, local_url, redact
-from . import auth, database, operations, network, shares, control
+from . import auth, database, operations, network, shares, control, user_profile, ssh_setup
 from .nat import normalize, normalize_section
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -139,11 +139,13 @@ async def lifespan(app):
     await control.shutdown()
 
 
-VERSION = '4.0.0-dev.1'
+VERSION = '4.0.1'
 app = FastAPI(title='Livebox OS', version=VERSION, docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=[h.strip() for h in os.environ.get('ORANGE_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],testserver').split(',')])
 app.include_router(auth.router)
 app.include_router(control.router)
+app.include_router(user_profile.router)
+app.include_router(ssh_setup.router)
 
 
 @app.exception_handler(RequestValidationError)
@@ -580,6 +582,8 @@ async def schema():
 dist = ROOT / 'frontend' / 'dist'
 if dist.is_dir():
     app.mount('/assets', StaticFiles(directory=dist / 'assets'), name='assets')
+    if (dist / 'hardware').is_dir():
+        app.mount('/hardware', StaticFiles(directory=dist / 'hardware'), name='hardware')
 
     @app.get('/')
     async def index():

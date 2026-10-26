@@ -202,6 +202,8 @@ def summarize(resource, reads):
         value.update(firmware=release.get('version') if isinstance(release, dict) else None, model=info.get('model'), uptime=data('system').get('uptime'))
     elif driver == 'ssh':
         output = reads.get('system', {}).get('data')
+        if isinstance(output, dict):
+            value.update(uptime=output.get('uptime_seconds'), model=output.get('os'))
         if isinstance(output, str):
             match = re.search(r'UPTIME\s+([0-9.]+)', output)
             if match:
@@ -334,6 +336,8 @@ async def add_resource(body: Resource):
         raise HTTPException(422, 'Sélectionnez SSH pour un serveur et un connecteur routeur pour un routeur.')
     if body.kind == 'server' and body.username.lower() == 'root':
         raise HTTPException(422, 'Utilisez un compte SSH dédié avec des permissions limitées.')
+    if body.kind == 'server' and (body.key_name.startswith('known_hosts') or body.key_name.endswith(('.pub', '.tmp'))):
+        raise HTTPException(422, 'Nom de clé réservé : choisissez un nom sans suffixe .pub/.tmp et ne commençant pas par known_hosts.')
     if len(all_items('control_resources')) >= 40:
         raise HTTPException(409, 'Limite de 40 équipements atteinte.')
     try:
@@ -391,6 +395,8 @@ async def connect(key: str, body: Login, request: Request):
                 box = await connect_router(resource, body.password.get_secret_value())
             connection = Connection(resource, box)
             await refresh(connection)
+            if resource['connector'] == 'ssh' and not connection.cache['summary']['reachable']:
+                raise HTTPException(502, connection.cache['reads']['system'].get('message', 'Lecture SSH impossible.'))
             sessions[session_key] = connection
             connection.task = asyncio.create_task(collect(session_key, connection))
             return connection.cache

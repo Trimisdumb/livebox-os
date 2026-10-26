@@ -52,6 +52,8 @@ import {
 } from "./api";
 import { ArcherPanel, TopologyPanel, AdvancedNATPanel, MonitorPanel } from "./NetworkPanels";
 import AuthGate from "./AuthGate";
+import UserMenu from "./UserMenu";
+import LiveboxPhoto from "./LiveboxPhoto";
 import DesktopWindow from './DesktopWindow';
 import { clampWindow, desktopPreferences, dockApplications, focusWindow, orderApplications, restoredGeometry, type DesktopPreferences, type DesktopWindowState } from './desktop';
 import { ApplicationSettings, AuditApplication, DesktopAppearance, DeviceApplication, DiagnosticApplication, LiveboxTools, NotificationApplication, OverviewApplication, RegistryApplication, RouterApplication, SecurityApplication, StatisticsApplication, Tabs } from './DesktopApps';
@@ -690,7 +692,7 @@ export default function App() {
               Livebox <b>OS</b>
               <small>VOTRE LIVEBOX, SIMPLEMENT.</small>
             </span>
-            <span className="version" title={version}>{version.split('-')[0]} dev</span>
+            <span className="version" title={version}>{version}</span>
           </div>
           <div className="header-right">
             <span className="local-badge">
@@ -714,14 +716,7 @@ export default function App() {
               )}
             </button>
             <span className="header-divider" />
-            <button
-              className="avatar"
-              title="Profils Livebox"
-              aria-label="Profils Livebox"
-              onClick={() => openApp("profiles")}
-            >
-              M
-            </button>
+            <UserMenu active={auth?.authenticated === true} profiles={() => openApp("profiles")} logout={() => void logout()} />
           </div>
         </header>
         <section className="desktop-intro">
@@ -770,19 +765,7 @@ export default function App() {
             </button>
           </div>
           <div className="router-scene">
-            <div className="router-shadow" />
-            <div className="router-box">
-              <span className="router-grid" />
-              <div className="router-face">
-                <span className="router-label">Livebox</span>
-                <div className="router-leds">
-                  <i />
-                  <i />
-                  <i />
-                </div>
-                <span className="router-orange">orange</span>
-              </div>
-            </div>
+            <LiveboxPhoto info={session.connected ? info : {}} />
             <div className="router-orbit orbit-a" />
             <div className="router-orbit orbit-b" />
             <span className="router-spark spark-a" />

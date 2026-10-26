@@ -1,6 +1,6 @@
 # API Livebox OS
 
-La branche `develop/v4` annonce `4.0.0-dev.1` dans `/api/health`. Cette version de développement conserve les routes V3 et ajoute le registre décrit dans [CONNECTORS.md](CONNECTORS.md).
+La branche `develop/v4` annonce `4.0.1` dans `/api/health`. Cette version de développement conserve les routes V3 et ajoute le registre décrit dans [CONNECTORS.md](CONNECTORS.md).
 
 `GET/PUT /api/preferences` conserve `theme`, `wallpaper`, `fit` et `blur`. Le champ facultatif `desktop` contient `icon_size` (small/medium/large), `icon_order` (identifiants uniques), `dock_pinned` (liste ou null pour toutes), `remember_windows`, `wallpaper_x/y` (0 à 100), `animations` et `accent` (orange/amber). Un ancien client qui omet `desktop` préserve sa valeur existante. Les positions et dimensions des fenêtres restent dans le navigateur, sans contenu de fenêtre ni identifiant réseau.
 
@@ -35,3 +35,22 @@ Avant confirmation, le backend relit les règles et compare leur empreinte, la s
 Un échec de création déclenche uniquement le retrait des nouvelles règles dont le marqueur et les champs correspondent exactement au plan. En cas de lecture impossible, l’état reste incertain ; aucune règle étrangère n’est retirée. Une modification partielle de règles existantes n’est jamais annulée silencieusement.
 
 La reconnexion TP-Link est optionnelle, limitée à la lecture et à une tentative par minute, pendant 8 h maximum. Un échec supprime le mot de passe de reconnexion. Aucune écriture n’est rejouée automatiquement. La déconnexion administrateur ferme également TP-Link et SMB. Les partages sont en lecture seule, sans DFS ni liens et sans accès au disque local du serveur.
+
+
+## V4.0.1 : profil utilisateur et configuration SSH
+
+Les routes suivantes conservent le cookie administrateur et la protection CSRF existants. Aucun identifiant de compte arbitraire n’est accepté pour lire une photo.
+
+| Route | Usage |
+|---|---|
+| GET/PUT `/api/user/profile` | Nom affiché du compte connecté ; PUT accepte seulement `display_name` (1 à 80 caractères) |
+| GET/PUT/DELETE `/api/user/avatar` | Photo du compte ; PUT reçoit des octets JPG/PNG/WebP, 5 Mo et 20 mégapixels maximum ; validation et réencodage WebP 256 × 256 sans métadonnées |
+| GET `/api/control/ssh/config` | Mode intégré/externe et clés publiques disponibles ; jamais une clé privée |
+| POST `/api/control/ssh/keys` | Génération Ed25519 dédiée : `{name}` ; noms réservés et remplacements refusés |
+| GET `/api/control/resources/{id}/host-key` | Lecture non approuvée de la clé publique d’hôte Ed25519 |
+| POST `/api/control/ssh/fingerprint` | Vérification syntaxique et calcul de l’empreinte d’une clé publique saisie manuellement ; aucune confiance enregistrée |
+| PUT `/api/control/resources/{id}/host-key` | `{public_key,fingerprint,verified:true}` ; empreinte identique obligatoire et acceptation explicite après comparaison depuis une console fiable |
+
+Les clés privées intégrées restent dans `data/ssh`, hors des exports applicatifs. Le dossier externe LIVEBOX_OS_SSH_DIR n’est jamais modifié par ces routes. Un test SSH qui échoue retourne une erreur explicative et ne crée pas de session connectée. La lecture `system` fournit désormais des mesures structurées ; les anciennes routes et permissions restent inchangées.
+
+Les noms et avatars vivent dans `data/users/<identifiant dérivé du compte>` et persistent avec le volume privé. Les sauvegardes complètes du volume les incluent ; l’export des préférences applicatives ne les inclut pas.

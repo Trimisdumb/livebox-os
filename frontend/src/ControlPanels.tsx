@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { WindowVisibility } from './DesktopWindow';
 import { api, text, duration, type Result } from './api';
+import SSHSetup, { LinuxSystem } from './SSHSetup';
 
 export type Resource = {
   id: string; name: string; kind: 'router' | 'server'; connector: string; host: string;
@@ -44,7 +45,7 @@ export function DataView({ path, title }: { path: string; title: string }) {
   const state = useRemote<Result>(path);
   return <section className="cc-section"><div className="cc-heading"><h2>{title}</h2><button onClick={() => void state.load()} disabled={state.busy}>Relire</button></div>
     <Feedback {...state} />
-    {state.data && (state.data.available ? <pre className="cc-data">{JSON.stringify(state.data.data, null, 2)}</pre> : <p className="cc-notice">{state.data.message || 'Non disponible : le firmware ne fournit pas cette information.'}</p>)}
+    {state.data && (state.data.available ? <pre className="cc-data">{typeof state.data.data === 'string' ? state.data.data : JSON.stringify(state.data.data, null, 2)}</pre> : <p className="cc-notice">{state.data.message || 'Non disponible : le firmware ne fournit pas cette information.'}</p>)}
   </section>;
 }
 
@@ -59,6 +60,7 @@ export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' 
   const [adding, add] = useState(false);
   const [message, setMessage] = useState('');
   const [working, setWorking] = useState(false);
+  const [jobError, setJobError] = useState(false);
   const [password, setPassword] = useState('');
   const [section, setSection] = useState('info');
   const [form, setForm] = useState({ name: '', host: '', connector: kind === 'server' ? 'ssh' : 'livebox', username: kind === 'server' ? 'monitor' : 'admin', port: 22, key_name: 'monitor', interval: 60, measure_ping: false, authorized: false });
@@ -72,15 +74,15 @@ export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' 
   const list = state.data?.filter(item => item.kind === kind) || [];
   const driver = catalog.data?.connectors.find(item => item.id === form.connector);
   async function run(job: () => Promise<void>) {
-    setWorking(true); setMessage('');
+    setWorking(true); setMessage(''); setJobError(false);
     try { await job(); await state.load(); onChange?.(); }
-    catch (e) { setMessage((e as Error).message); }
+    catch (e) { setMessage((e as Error).message); setJobError(true); }
     finally { setWorking(false); }
   }
   const sections = resource?.connector === 'ssh' ? ['system', 'services', 'docker', 'wireguard', 'openvpn', 'tailscale'] : resource?.connector === 'openwrt' ? ['info', 'system', 'network'] : resource?.connector === 'tplink' ? ['status', 'network', 'wan', 'firmware', 'wifi2', 'wifi5', 'leases', 'ports'] : ['info', 'wan', 'lan', 'devices', 'wifi', 'guest', 'schedule', 'firewall', 'firewall6', 'ping', 'dmz', 'ports', 'dhcp', 'dyndns', 'reboots', 'calls'];
   return <div className="cc-section"><div className="cc-heading"><h2>{kind === 'server' ? 'Serveurs Linux' : 'Équipements enregistrés'}</h2><button onClick={() => { add(!adding); setMessage(''); }}>{adding ? 'Fermer l’assistant' : kind === 'server' ? 'Ajouter un serveur' : 'Ajouter un routeur'}</button></div>
     <Feedback {...state} />
-    {message && <p role="status" className="cc-notice">{message}</p>}
+    {message && <p role={jobError ? 'alert' : 'status'} className={jobError ? 'cc-error' : 'cc-notice'}>{message}</p>}
     {adding && <form className="cc-form" onSubmit={e => { e.preventDefault(); void run(async () => {
       const value = await api<Resource>('/control/resources', { ...form, kind });
       select(value.id); setSection(kind === 'server' ? 'system' : form.connector === 'tplink' ? 'status' : 'info'); add(false);
@@ -94,11 +96,11 @@ export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' 
         <label>{kind === 'server' ? 'Adresse IP ou nom DNS' : 'Adresse HTTP(S), IP ou nom DNS'}<input required value={form.host} onChange={e => setForm({ ...form, host: e.target.value })} placeholder={kind === 'server' ? 'Nom DNS du serveur' : 'Adresse du routeur sur votre réseau'} /></label>
         {kind === 'router' && <label>Fabricant / connecteur<select value={form.connector} onChange={e => setForm({ ...form, connector: e.target.value })}>{catalog.data?.connectors.map(item => <option key={item.id} value={item.id}>{item.manufacturer}{item.status === 'unavailable' ? ' : non disponible' : ''}</option>)}</select></label>}
         {form.connector !== 'tplink' && <label>Compte de connexion<input required value={form.username} pattern="[A-Za-z0-9_.-]+" onChange={e => setForm({ ...form, username: e.target.value })} /></label>}
-        {kind === 'server' && <><label>Port SSH<input type="number" min={1} max={65535} value={form.port} onChange={e => setForm({ ...form, port: Number(e.target.value) })} /></label><label>Nom du fichier de clé côté backend<input required pattern="[A-Za-z0-9][A-Za-z0-9_.-]+" value={form.key_name} onChange={e => setForm({ ...form, key_name: e.target.value })} /></label></>}
+        {kind === 'server' && <><label>Port SSH<input type="number" min={1} max={65535} value={form.port} onChange={e => setForm({ ...form, port: Number(e.target.value) })} /></label><label>Nom de la clé dédiée côté backend<input required maxLength={64} pattern="[A-Za-z0-9][A-Za-z0-9_.-]{0,63}" value={form.key_name} onChange={e => setForm({ ...form, key_name: e.target.value })} /></label></>}
         <label>Intervalle de collecte (secondes)<input type="number" min={30} max={3600} value={form.interval} onChange={e => setForm({ ...form, interval: Number(e.target.value) })} /></label>
       </div>
       {driver && <p>Modèle : {driver.model || 'Non disponible'}. Méthode : {driver.method || 'Non disponible'}. {driver.note}</p>}
-      {kind === 'server' && <p>Le backend doit disposer d’un dossier de clés dédié et de known_hosts vérifié. Aucun accès root ni console interactive n’est proposé.</p>}
+      {kind === 'server' && <p>Après l’enregistrement, ouvrez la configuration SSH pour créer une clé dédiée et vérifier l’identité du serveur. Le compte doit exister sur le serveur et ne doit pas être root. Pour Tailscale, autorisez explicitement son sous-réseau via LIVEBOX_OS_ALLOWED_NETWORKS côté backend.</p>}
       <label className="cc-check"><input type="checkbox" required checked={form.authorized} onChange={e => setForm({ ...form, authorized: e.target.checked })} />Je suis autorisé à administrer cet équipement et à effectuer ces lectures.</label>
       <label className="cc-check"><input type="checkbox" checked={form.measure_ping} onChange={e => setForm({ ...form, measure_ping: e.target.checked })} />Mesurer la latence et la perte avec 4 requêtes ping à chaque collecte (facultatif).</label>
       <button className="cc-primary" disabled={working || kind === 'router' && driver?.status === 'unavailable'}>Enregistrer le profil</button>
@@ -111,15 +113,16 @@ export function ResourcesPanel({ kind = 'router', onChange }: { kind?: 'router' 
       if (window.confirm(`Retirer le profil local « ${resource.name} » ? Ses règles réseau resteront intactes.`)) void run(async () => { await api(`/control/resources/${resource.id}`, undefined, 'DELETE'); select(''); });
     }}>Retirer ce profil…</button></div>
       <details onToggle={e => { if (e.currentTarget.open) { setEditName(resource.name); setEditInterval(resource.interval); } }}><summary>Modifier le nom et l’intervalle de collecte</summary><form className="cc-form" onSubmit={e => { e.preventDefault(); void run(async () => { await api(`/control/resources/${resource.id}`, { name: editName, interval: editInterval }, 'PUT'); setMessage('Nom et intervalle enregistrés. Aucun réglage réseau modifié.'); }); }}><div className="cc-fields"><label>Nom<input required maxLength={60} value={editName} onChange={e => setEditName(e.target.value)} /></label><label>Intervalle (secondes)<input type="number" min={30} max={3600} value={editInterval} onChange={e => setEditInterval(Number(e.target.value))} /></label></div><button disabled={working}>Enregistrer ces préférences</button></form></details>
+      {resource.connector === 'ssh' && <SSHSetup key={resource.id} resource={resource} />}
       {!resource.connected ? <form className="cc-form" onSubmit={e => { e.preventDefault(); const secret = password; setPassword(''); void run(async () => { const result = await api<{ summary: { reachable: boolean } }>(`/control/resources/${resource.id}/connect`, { password: secret }); setMessage(result.summary.reachable ? 'Connexion et lecture réussies.' : 'Lecture non disponible. Vérifiez les droits et le diagnostic.'); }); }}>
         {kind === 'router' && <label>Mot de passe administrateur<input type="password" required value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" /></label>}
-        <p>Le secret est envoyé au backend puis remplacé par une session temporaire. Reconnexion manuelle après expiration ou redémarrage.</p>
-        <button disabled={working} className="cc-primary">Tester et connecter</button>
+        <p>{kind === 'server' ? 'Le test utilise le compte, le port et la clé ci-dessus, avec vérification stricte de l’identité SSH. Une lecture Linux réussie ouvre la session.' : 'Le secret est envoyé au backend puis remplacé par une session temporaire. Reconnexion manuelle après expiration ou redémarrage.'}</p>
+        <button disabled={working} className="cc-primary">{kind === 'server' ? 'Tester la connexion' : 'Tester et connecter'}</button>
       </form> : <>
-        <dl className="cc-facts"><div><dt>Modèle déclaré</dt><dd>{text(resource.observation?.summary.model)}</dd></div><div><dt>Firmware déclaré</dt><dd>{text(resource.observation?.summary.firmware)}</dd></div><div><dt>Uptime</dt><dd>{duration(resource.observation?.summary.uptime)}</dd></div><div><dt>Dernière collecte</dt><dd>{resource.observation?.updated ? new Date(resource.observation.updated * 1000).toLocaleString() : 'Non disponible'}</dd></div></dl>
+        <dl className="cc-facts"><div><dt>{resource.connector === 'ssh' ? 'Système déclaré' : 'Modèle déclaré'}</dt><dd>{text(resource.observation?.summary.model)}</dd></div><div><dt>Firmware déclaré</dt><dd>{text(resource.observation?.summary.firmware)}</dd></div><div><dt>Uptime</dt><dd>{duration(resource.observation?.summary.uptime)}</dd></div><div><dt>Dernière collecte</dt><dd>{resource.observation?.updated ? new Date(resource.observation.updated * 1000).toLocaleString() : 'Non disponible'}</dd></div></dl>
         <div className="cc-actions"><button disabled={working} onClick={() => void run(async () => { await api(`/control/resources/${resource.id}/disconnect`, {}); })}>Déconnecter cette session</button></div>
         <label>Lecture disponible<select value={section} onChange={e => setSection(e.target.value)}>{sections.map(value => <option key={value}>{value}</option>)}</select></label>
-        <DataView key={`${resource.id}/${section}`} title="Réponse de l’équipement" path={`/control/resources/${resource.id}/read/${section}`} />
+        {resource.connector === 'ssh' && section === 'system' ? <LinuxSystem key={resource.id} resource={resource} /> : <DataView key={`${resource.id}/${section}`} title="Réponse de l’équipement" path={`/control/resources/${resource.id}/read/${section}`} />}
         {resource.connector === 'livebox' && <section className="cc-form"><h3>Opérations Livebox avec confirmation</h3><p>API étudiée dans LiveboxMonitor. La lecture préalable bloque l’opération si le firmware refuse le service. Aucun test d’écriture n’est exécuté automatiquement.</p>
           <label>Opération<select value={action} onChange={e => { setAction(e.target.value); setPrepared(undefined); }}><option value="guest-on">Activer le Wi-Fi invité</option><option value="guest-off">Désactiver le Wi-Fi invité</option><option value="firewall-High">Pare-feu IPv4 : élevé</option><option value="firewall-Medium">Pare-feu IPv4 : moyen</option><option value="firewall-Low">Pare-feu IPv4 : faible</option><option value="reboot">Redémarrer la Livebox</option></select></label>
           <button disabled={working} onClick={() => void run(async () => { const [name, value] = action.split('-'); setPrepared(await api(`/control/resources/${resource.id}/actions/prepare`, { action: name, ...(name === 'guest' ? { enabled: value === 'on' } : name === 'firewall' ? { level: value } : {}) })); setPhrase(''); })}>Lire l’état et préparer</button>

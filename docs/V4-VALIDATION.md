@@ -16,7 +16,7 @@ The local backend run emits an upstream Starlette/httpx deprecation warning; all
 
 The owner-supplied 1920 × 1000 V3 screenshot was inspected before editing. The running application was then captured at the same CSS dimensions and compared visually. It retains the top identity/theme/profile bar, large welcome message at the left, three-column colored app grid, right Livebox connection card, customizable background and translucent bottom dock. Measured V4 regions include the app grid at x225/y430 (550px wide), Livebox card at x1302/y290 (330px wide), and dock at y915 (65px high).
 
-The reference's wallpaper is a private user import, not the built-in background. It was neither copied into the repository nor adopted as the default. Published [light](images/v4-network-light.png), [dark](images/v4-network-dark.png) and [phone](images/v4-network-mobile.png) captures show the actual isolated installation without connected hardware or personal network records. The additional apps extend the existing scrollable grid and dock.
+The reference's wallpaper is a private user import, not the built-in background. It was neither copied into the repository nor adopted as the default. Published [light](images/v4-network-light.jpg), [dark](images/v4-network-dark.jpg) and [phone](images/v4-network-mobile.jpg) captures show the actual isolated installation without connected hardware or personal network records. The additional apps extend the existing scrollable grid and dock.
 
 ## Browser checks
 

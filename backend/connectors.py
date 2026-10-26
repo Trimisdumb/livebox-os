@@ -4,6 +4,7 @@ import json
 import os
 import re
 import socket
+import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -11,6 +12,7 @@ import httpx
 
 from .livebox import Livebox, LiveboxError, redact
 from .tplink import AX58
+from . import auth
 
 
 CATALOG = [
@@ -141,7 +143,7 @@ class OpenWrt:
 
 
 SSH_COMMANDS = {
-    'system': "printf 'UPTIME\\n'; cat /proc/uptime; printf 'LOAD\\n'; cat /proc/loadavg; printf 'MEMORY\\n'; head -n 5 /proc/meminfo; printf 'DISK\\n'; df -Pk /; printf 'NETWORK\\n'; head -n 32 /proc/net/dev",
+    'system': "printf 'CPU\\n'; head -n 1 /proc/stat; sleep 1; head -n 1 /proc/stat; printf 'OS\\n'; cat /etc/os-release; printf 'UPTIME\\n'; cat /proc/uptime; printf 'LOAD\\n'; cat /proc/loadavg; printf 'MEMORY\\n'; cat /proc/meminfo; printf 'DISK\\n'; df -Pk -x tmpfs -x devtmpfs; printf 'NETWORK\\n'; head -n 64 /proc/net/dev",
     'services': 'systemctl list-units --type=service --state=running --no-pager --no-legend',
     'docker': "docker ps --format '{{json .}}'",
     'wireguard': 'wg show all transfer; wg show all latest-handshakes',
@@ -151,42 +153,95 @@ SSH_COMMANDS = {
 ssh_limit = asyncio.Semaphore(2)
 
 
-async def run_bounded(arguments, timeout=15):
-    process = await asyncio.create_subprocess_exec(*arguments, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL, stdin=asyncio.subprocess.DEVNULL)
-    async def read():
+async def run_bounded(arguments, timeout=15, capture_stderr=False):
+    process = await asyncio.create_subprocess_exec(*arguments, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE if capture_stderr else asyncio.subprocess.DEVNULL, stdin=asyncio.subprocess.DEVNULL)
+    async def read(stream, limit):
         output = bytearray()
-        while chunk := await process.stdout.read(4096):
+        while chunk := await stream.read(4096):
             output.extend(chunk)
-            if len(output) > 128 * 1024:
+            if len(output) > limit:
                 raise ValueError('Réponse trop volumineuse.')
-        await process.wait()
         return output.decode('utf-8', errors='replace')
     try:
-        output = await asyncio.wait_for(read(), timeout)
-        return process.returncode, output
+        async def collect():
+            streams = [read(process.stdout, 128 * 1024)]
+            if capture_stderr:
+                streams.append(read(process.stderr, 16 * 1024))
+            values = await asyncio.gather(*streams)
+            await process.wait()
+            return process.returncode, values[-1] if capture_stderr and process.returncode else values[0]
+        return await asyncio.wait_for(collect(), timeout)
     finally:
         if process.returncode is None:
             process.kill()
             await process.wait()
 
 
+def ssh_directory():
+    return Path(os.environ.get('LIVEBOX_OS_SSH_DIR') or auth.DATA / 'ssh').resolve()
+
+
+def ssh_alias(resource):
+    return resource['host'] if os.environ.get('LIVEBOX_OS_SSH_DIR') else 'livebox-os-' + resource['id']
+
+
+def linux_system(output):
+    blocks = re.split(r'(?m)^(CPU|OS|UPTIME|LOAD|MEMORY|DISK|NETWORK)\r?\n', output)
+    sections = dict(zip(blocks[1::2], blocks[2::2]))
+    cpu = [list(map(int, line.split()[1:9])) for line in sections.get('CPU', '').splitlines() if re.fullmatch(r'cpu(?:\s+\d+){4,}', line)]
+    usage = None
+    if len(cpu) == 2 and all(b >= a for a, b in zip(*cpu)):
+        total = sum(cpu[1]) - sum(cpu[0])
+        idle = sum(cpu[1][3:5]) - sum(cpu[0][3:5])
+        if total > 0: usage = round(100 * (total - idle) / total, 1)
+    memory = {k: int(v) * 1024 for k, v in re.findall(r'(?m)^(MemTotal|MemAvailable):\s+(\d+)\s+kB', sections.get('MEMORY', ''))}
+    total, available = memory.get('MemTotal'), memory.get('MemAvailable')
+    uptime = re.match(r'([0-9.]+)', sections.get('UPTIME', ''))
+    operating_system = re.search(r'(?m)^PRETTY_NAME=(.+)$', sections.get('OS', ''))
+    disks = []
+    for line in sections.get('DISK', '').splitlines():
+        row = re.fullmatch(r'(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)%\s+(.+)', line)
+        if row:
+            fs, size, used, free, percent, mount = row.groups()
+            disks.append({'filesystem': fs, 'mount': mount, 'total_bytes': int(size)*1024, 'used_bytes': int(used)*1024, 'available_bytes': int(free)*1024, 'used_percent': int(percent)})
+    interfaces = []
+    for line in sections.get('NETWORK', '').splitlines():
+        if ':' not in line: continue
+        name, values = line.split(':', 1)
+        fields = values.split()
+        if len(fields) >= 16 and all(v.isdigit() for v in fields):
+            interfaces.append({'name': name.strip(), 'received_bytes': int(fields[0]), 'sent_bytes': int(fields[8])})
+    return {'cpu_percent': usage, 'uptime_seconds': float(uptime.group(1)) if uptime else None,
+            'os': operating_system.group(1).strip('"\'') if operating_system else None,
+            'memory': {'total_bytes': total, 'available_bytes': available, 'used_bytes': total-available if total is not None and available is not None and total >= available else None},
+            'disks': disks, 'interfaces': interfaces, 'measured_at': time.time()}
+
+
 async def ssh_read(resource, section):
     if section not in SSH_COMMANDS:
         return unavailable()
-    directory = os.environ.get('LIVEBOX_OS_SSH_DIR')
-    if not directory:
-        return unavailable('Non disponible : LIVEBOX_OS_SSH_DIR non configuré côté backend.')
-    root = Path(directory).resolve()
+    root = ssh_directory()
     key = (root / resource['key_name']).resolve()
     if key.parent != root or not key.is_file() or not (root / 'known_hosts').is_file():
         return unavailable('Clé dédiée ou fichier known_hosts vérifié absent du dossier SSH autorisé.')
     try:
         ip = await resolve_host(resource['host'])
-        args = ['ssh', '-F', 'none', '-T', '-a', '-x', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes', '-o', 'IdentitiesOnly=yes', '-o', 'IdentityAgent=none', '-o', 'ConnectTimeout=5', '-o', 'ConnectionAttempts=1', '-o', 'ServerAliveInterval=5', '-o', 'ServerAliveCountMax=1', '-o', 'ClearAllForwardings=yes', '-o', 'PermitLocalCommand=no', '-o', f'UserKnownHostsFile={root / "known_hosts"}', '-o', 'GlobalKnownHostsFile=none', '-o', f'HostKeyAlias={resource["host"]}', '-i', str(key), '-p', str(resource['port']), '-l', resource['username'], ip, SSH_COMMANDS[section]]
+        args = ['ssh', '-F', 'none', '-T', '-a', '-x', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes', '-o', 'IdentitiesOnly=yes', '-o', 'IdentityAgent=none', '-o', 'ConnectTimeout=5', '-o', 'ConnectionAttempts=1', '-o', 'ServerAliveInterval=5', '-o', 'ServerAliveCountMax=1', '-o', 'ClearAllForwardings=yes', '-o', 'PermitLocalCommand=no', '-o', f'UserKnownHostsFile="{(root / "known_hosts").as_posix()}"', '-o', 'GlobalKnownHostsFile=none', '-o', f'HostKeyAlias={ssh_alias(resource)}', '-i', str(key), '-p', str(resource['port']), '-l', resource['username'], ip, SSH_COMMANDS[section]]
         async with ssh_limit:
-            code, output = await run_bounded(args)
+            code, output = await run_bounded(args, capture_stderr=True)
         if code != 0:
-            return unavailable('Lecture SSH refusée : vérifiez la clé, known_hosts et les permissions du compte dédié.')
+            reason = output.lower()
+            if 'host key verification failed' in reason or 'identification has changed' in reason:
+                return unavailable('Identité SSH absente ou différente. Vérifiez l’empreinte du serveur dans la configuration SSH ; aucune clé inconnue n’est acceptée automatiquement.')
+            if 'permission denied' in reason or 'load key' in reason or 'bad permissions' in reason:
+                return unavailable('Authentification SSH refusée. Vérifiez le compte, sa clé publique dans authorized_keys et les permissions de la clé privée (600).')
+            if 'connection refused' in reason:
+                return unavailable('Connexion refusée : vérifiez le port SSH et que le service sshd écoute sur ce serveur.')
+            if 'timed out' in reason or 'no route to host' in reason:
+                return unavailable('Serveur SSH injoignable : vérifiez l’adresse, le VPN et le pare-feu depuis le backend.')
+            return unavailable('Commande SSH indisponible ou non autorisée pour ce compte. Consultez les permissions du service demandé.')
+        if section == 'system':
+            output = linux_system(output)
         if section == 'tailscale':
             data = json.loads(output)
             output = {'BackendState': data.get('BackendState'), 'TailscaleIPs': data.get('TailscaleIPs'), 'peers': len(data.get('Peer') or {})}

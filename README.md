@@ -7,7 +7,7 @@
 **Your routers. Your network. Your desktop.**  
 **Vos routeurs. Votre réseau. Votre bureau.**
 
-![Development version](https://img.shields.io/badge/development-4.0.0--dev.1-ff7900)
+![Development version](https://img.shields.io/badge/development-4.0.1-ff7900)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776ab)
 ![React](https://img.shields.io/badge/React-19-149eca)
@@ -18,13 +18,13 @@
 
 </div>
 
-> **V4 on `main`, `4.0.0-dev.1`:** the V3 desktop remains the main interface. Router inventory, VPN, Linux servers, security reads, monitoring and notifications open in desktop windows. Personalization adds icon ordering/sizing, dock pinning and optional window geometry persistence. This is **not a stable V4 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). V3 remains available at tag `v3.0.0`.
+> **V4 on `main`, `4.0.1`:** the V3 desktop remains the main interface. Router inventory, VPN, Linux servers, security reads, monitoring and notifications open in desktop windows. Personalization adds icon ordering/sizing, dock pinning and optional window geometry persistence. This is **not a stable V4 release**. Hardware limits, installation and remaining work are listed in the [V4 guide](docs/V4.md). V3 remains available at tag `v3.0.0`.
 >
-> **V4 sur `main`, `4.0.0-dev.1` :** le bureau V3 reste l’interface principale, avec ses icônes colorées, son dock et ses fenêtres. Les applications Routeurs, VPN, Serveurs, Sécurité et Notifications intègrent les fonctions V4. Personnalisation règle aussi l’ordre et la taille des icônes, le dock et la mémorisation facultative des fenêtres. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). La V3 reste disponible au tag `v3.0.0`. Les images personnelles importées ne sont pas distribuées avec le projet.
+> **V4 sur `main`, `4.0.1` :** le bureau V3 reste l’interface principale, avec ses icônes colorées, son dock et ses fenêtres. Les applications Routeurs, VPN, Serveurs, Sécurité et Notifications intègrent les fonctions V4. Personnalisation règle aussi l’ordre et la taille des icônes, le dock et la mémorisation facultative des fenêtres. Consultez le [guide et les limites](docs/V4.md), les [connecteurs](docs/CONNECTORS.md) et la [configuration SSH/VPN](docs/SERVERS-VPN.md). La V3 reste disponible au tag `v3.0.0`. Les images personnelles importées ne sont pas distribuées avec le projet.
 
-![V4 desktop based on V3, actual unconnected local installation with the built-in background](docs/images/v4-network-light.png)
+![V4 desktop based on V3, actual unconnected local installation with the built-in background](docs/images/v4-network-light.jpg)
 
-[Dark theme](docs/images/v4-network-dark.png) · [Mobile view](docs/images/v4-network-mobile.png) · [V4 validation and limits](docs/V4-VALIDATION.md)
+[V4.0.1 fixes and checks](docs/V4.0.1-VALIDATION.md) · [User profile](docs/images/v4-profile.jpg) · [Dark theme](docs/images/v4-network-dark.jpg) · [Mobile view](docs/images/v4-network-mobile.jpg) · [V4 validation and limits](docs/V4-VALIDATION.md)
 
 <details>
 <summary>V3 reference / Référence V3</summary>
@@ -50,7 +50,7 @@ No cloud account, maintainer server or external service is required to run it. R
 | Double NAT | Prepare Livebox → Archer WAN → destination device, detect port conflicts, confirm, write and read back both rules |
 | Managed operations | Coordinated update/delete, audit trail, partial/unknown states and rollback limited to newly created matching rules |
 | Tools | Topology based on router observations, monitoring, ping/API/DNS/HTTPS diagnostics, call history where supported |
-| Personalization | Built-in backgrounds, JPG/PNG/WebP import, fit/blur preferences, portable application backups |
+| Personalization | Built-in backgrounds, JPG/PNG/WebP import, fit/blur preferences, portable application backups; account display name and cropped avatar |
 | Storage | USB capability detection and explicit read-only SMB2/3 shares with browsing and downloads |
 
 An unsupported or unreadable service is reported as unavailable. A NAT rule being present **does not prove that a port is publicly reachable**. Existing rules are preserved and are not silently adopted into coordinated operations.

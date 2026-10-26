@@ -86,5 +86,8 @@ jobs:
           python -c "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:18097/api/health')); assert d['application']=='Livebox OS' and d['status']=='ok'"
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18097/api/network/nat)" = 401
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18097/api/control/resources)" = 401
+          for photo in livebox-4.jpg livebox-5.png livebox-6.jpg credits.html; do
+            curl --fail --silent "http://127.0.0.1:18097/hardware/$photo" --output /dev/null
+          done
       - if: always()
         run: docker compose -p livebox-os-ci down --volumes --remove-orphans

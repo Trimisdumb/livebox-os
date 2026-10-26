@@ -28,6 +28,7 @@ router = APIRouter(prefix='/api/auth')
 
 @dataclass
 class AdminSession:
+    username: str = ''
     expires: float = field(default_factory=lambda: time.time() + LIFETIME)
     csrf: str = field(default_factory=lambda: secrets.token_urlsafe(32))
     pending: dict = field(default_factory=dict)
@@ -92,14 +93,14 @@ def account_path():
     return DATA / 'account.json'
 
 
-def issue(request, response):
+def issue(request, response, username):
     for key, value in list(sessions.items()):
         if value.expires <= time.time():
             sessions.pop(key, None)
     if len(sessions) >= 16:
         raise HTTPException(429, 'Trop de sessions Livebox OS ouvertes.')
     key = secrets.token_urlsafe(32)
-    session = AdminSession()
+    session = AdminSession(username=username)
     sessions[key] = session
     response.set_cookie(COOKIE, key, httponly=True, samesite='strict', secure=os.environ.get('ORANGE_COOKIE_SECURE') == '1' or request.url.scheme == 'https', max_age=LIFETIME)
     return {'authenticated': True, 'configured': True, 'csrf': session.csrf}
@@ -161,7 +162,7 @@ async def setup(body: Credentials, request: Request, response: Response):
         with contextlib.suppress(OSError):
             account_path().chmod(0o600)
     response.delete_cookie('orange_setup')
-    return issue(request, response)
+    return issue(request, response, body.username)
 
 
 @router.post('/login')
@@ -175,7 +176,7 @@ async def login(body: Credentials, request: Request, response: Response):
         valid = False
     if not valid:
         raise HTTPException(401, 'Identifiant ou mot de passe Livebox OS incorrect.')
-    return issue(request, response)
+    return issue(request, response, body.username)
 
 
 @router.post('/logout')

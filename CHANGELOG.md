@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased: V4 development
+## 4.0.1 — 2026-10-26
+
+- Fixed SSH connection testing: failed reads no longer create connected sessions; missing identity, rejected authentication, refused port and network failures have distinct messages.
+- Added backend-managed dedicated Ed25519 keys and explicit host-fingerprint verification. Only public keys reach the browser; externally managed SSH folders remain supported and unchanged.
+- Added Linux CPU measurements from counter deltas, RAM, filesystems, uptime and interface counters; missing optional services remain unavailable.
+- Corrected the scrollable window content area without changing desktop, dock, icons or window controls.
+- Added an account-scoped display name and persistent avatar, with browser crop/preview and server-side image validation, resizing and metadata removal.
+- Replaced the fabricated Livebox illustration with licensed, credited photographs for verified Livebox 4/5/6 identities and a neutral fallback for other models. Card geometry and controls are retained.
+
+This patch does not mark the unfinished V4 roadmap complete or create a stable V4 release automatically.
+
+## 4.0.0-dev.1 — V4 development snapshot
 
 Package and API version: `4.0.0-dev.1`. This branch is not a stable V4 release.
 

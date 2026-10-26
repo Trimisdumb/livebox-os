@@ -253,6 +253,13 @@
       "license": "BSD-3-Clause",
       "source": "https://pypi.org/project/websockets/17.3/#files",
       "notice": "licenses/python-websockets.txt"
+    },
+    {
+      "name": "Pillow",
+      "version": "13.0.0",
+      "license": "MIT-CMU; bundled codec notices retained",
+      "source": "https://pypi.org/project/Pillow/13.0.0/#files",
+      "notice": "licenses/pillow/LICENSE"
     }
   ],
   "frontend": [

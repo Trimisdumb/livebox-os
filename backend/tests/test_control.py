@@ -197,7 +197,7 @@ def test_ssh_host_verification_fixed_commands_and_key_directory(monkeypatch, tmp
     (tmp_path / 'monitor').write_text('test-file-not-a-key')
     (tmp_path / 'known_hosts').write_text('test-file-not-a-host-key')
     seen = []
-    async def run(arguments, timeout=15):
+    async def run(arguments, timeout=15, capture_stderr=False):
         seen.extend(arguments)
         return 0, 'test-output'
     monkeypatch.setattr(connectors, 'run_bounded', run)

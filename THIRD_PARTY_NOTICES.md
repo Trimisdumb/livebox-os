@@ -31,10 +31,21 @@ The resolved Windows and Linux validation inventory, with package versions, decl
 | lightningcss and its platform binary (build tools) | MPL-2.0; unmodified. Source: [lightningcss](https://github.com/parcel-bundler/lightningcss), with the exact package version in the inventory |
 | caniuse-lite (build-time browser data) | CC-BY-4.0; retain its attribution/license. Source: [caniuse-lite](https://github.com/browserslist/caniuse-lite), derived from [Can I use](https://caniuse.com/) data |
 | Python typing extensions | PSF-2.0; retain the distributed license |
+| Pillow 13.0.0 and bundled image codecs | MIT-CMU and the codec notices in [licenses/pillow/LICENSE](licenses/pillow/LICENSE); used to validate, resize and strip metadata from account avatars |
 
 MPL applies at the covered-file level; these separately installed, unmodified components are not being relicensed. Build tools are not copied into the final static frontend image. Where redistributed components require corresponding source, use the versioned upstream source identified in the inventory; no modifications to those dependencies are included here. Runtime wheels retain their license metadata inside site-packages. Dockerfiles also copy these project notices into their images.
 
 The MIT license allows commercial use as well as free use; “free project” does not remove dependencies' attribution or source-availability obligations.
+
+## Hardware photographs
+
+The original, unmodified photographs in `frontend/public/hardware/` are separately licensed **CC BY-SA 4.0**, not MIT. The in-app photo credit links to [the bundled attribution page](frontend/public/hardware/credits.html), with authors, sources and the license URI. No Orange endorsement or unrestricted Orange photo permission is claimed.
+
+- Livebox 4: Poudou99, [Livebox-Orange-V4 - IMG 6465.jpg](https://commons.wikimedia.org/wiki/File:Livebox-Orange-V4_-_IMG_6465.jpg).
+- Livebox 5: Théodu57, [Livebox 5.png](https://commons.wikimedia.org/wiki/File:Livebox_5.png), 2024-07-29.
+- Livebox 6: Poudou99, [Livebox 6 - Devant - IMG 0057.jpg](https://commons.wikimedia.org/wiki/File:Livebox_6_-_Devant_-_IMG_0057.jpg).
+
+License: [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Source checksums are pinned by `scripts/check_release.py`. The verified ProductClass naming comes from the credited LiveboxMonitor reference; conflicting/unknown models and models without a licensed photograph use a neutral pictogram. The photo catalogue does not extend router protocol compatibility.
 
 ## Images, screenshots and trademarks
 
@@ -42,7 +53,7 @@ The current `livebox-logo.svg` and CSS wallpaper are original project assets. Pu
 
 An owner-supplied legacy PNG had no documented redistribution license. It is excluded from this public copy; the unused legacy logo URL returns the current project SVG. The current user interface already uses that SVG and is unchanged. The original private asset remains in the private project.
 
-No original Freebox screenshot, vendor-provided corporate-logo image or proprietary router frontend bundle is included. The CSS router illustration identifies the product and its brand. Orange, Livebox, Freebox and TP-Link names and trademarks remain with their respective owners. No trademark license or affiliation is implied.
+No original Freebox screenshot, vendor-provided corporate-logo image or proprietary router frontend bundle is included. The separately licensed hardware photographs are credited above; unknown models use a neutral pictogram. Orange, Livebox, Freebox and TP-Link names and trademarks remain with their respective owners. No trademark license or affiliation is implied.
 
 ## Maintainer checklist
 
