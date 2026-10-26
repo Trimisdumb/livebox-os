@@ -336,7 +336,7 @@ async def add_resource(body: Resource):
         raise HTTPException(422, 'Sélectionnez SSH pour un serveur et un connecteur routeur pour un routeur.')
     if body.kind == 'server' and body.username.lower() == 'root':
         raise HTTPException(422, 'Utilisez un compte SSH dédié avec des permissions limitées.')
-    if body.kind == 'server' and (body.key_name.startswith('known_hosts') or body.key_name.endswith(('.pub', '.tmp'))):
+    if body.kind == 'server' and (body.key_name.lower().startswith('known_hosts') or body.key_name.lower().endswith(('.pub', '.tmp'))):
         raise HTTPException(422, 'Nom de clé réservé : choisissez un nom sans suffixe .pub/.tmp et ne commençant pas par known_hosts.')
     if len(all_items('control_resources')) >= 40:
         raise HTTPException(409, 'Limite de 40 équipements atteinte.')

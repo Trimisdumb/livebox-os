@@ -25,7 +25,7 @@ class KeyName(BaseModel):
     @field_validator('name')
     @classmethod
     def reserved(cls, value):
-        if value.startswith('known_hosts') or value.endswith(('.pub', '.tmp')):
+        if value.lower().startswith('known_hosts') or value.lower().endswith(('.pub', '.tmp')):
             raise ValueError('Nom réservé.')
         return value
 

@@ -42,7 +42,8 @@ eth0: 1234 1 0 0 0 0 0 0 5678 1 0 0 0 0 0 0
 
 def test_verified_host_identity_is_required_and_only_public_keys_are_returned(client, monkeypatch, tmp_path):
     monkeypatch.delenv('LIVEBOX_OS_SSH_DIR', raising=False)
-    assert add(client, kind='server', connector='ssh', username='monitor', key_name='known_hosts').status_code == 422
+    for name in ('known_hosts', 'KNOWN_HOSTS', 'monitor.PUB', 'monitor.TMP'):
+        assert add(client, kind='server', connector='ssh', username='monitor', key_name=name).status_code == 422
     key = add(client, kind='server', connector='ssh', username='monitor').json()['id']
     public = host_public_key()
     async def scan(arguments, timeout=15, capture_stderr=False):
@@ -65,8 +66,8 @@ def test_verified_host_identity_is_required_and_only_public_keys_are_returned(cl
     assert 'private-test-material' not in config.text
     assert config.json()['keys'][0]['name'] == 'monitor'
     assert client.post('/api/control/ssh/keys', json={'name': '../escape'}).status_code == 422
-    assert client.post('/api/control/ssh/keys', json={'name': 'known_hosts'}).status_code == 422
-    assert client.post('/api/control/ssh/keys', json={'name': 'key.pub'}).status_code == 422
+    for name in ('known_hosts', 'KNOWN_HOSTS', 'key.pub', 'key.PUB', 'key.TMP'):
+        assert client.post('/api/control/ssh/keys', json={'name': name}).status_code == 422
 
 
 def test_failed_ssh_test_does_not_create_a_connected_session(client, monkeypatch):
